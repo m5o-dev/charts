@@ -3,12 +3,12 @@ entries:
   helm-boilerplate:
   - apiVersion: v2
     appVersion: 0.0.1
-    created: "2025-04-27T17:51:57.685599136Z"
+    created: "2025-04-27T18:00:37.389283678Z"
     description: A Helm chart boilerplate for Kubernetes applications
-    digest: ceb75658920c8ab60d4b6cd86f04c4750d52106d6bd794d7fd4f6a01555ae619
+    digest: 8b62cbe3078288aaedc74bd940d4da89c945c04fb90f27a078152d4162066917
     name: helm-boilerplate
     type: application
     urls:
-    - https://m5o-dev.github.io/charts/helm-boilerplate-0.0.3.tgz
-    version: 0.0.3
-generated: "2025-04-27T17:51:57.684726192Z"
+    - https://m5o-dev.github.io/charts/helm-boilerplate-0.0.4.tgz
+    version: 0.0.4
+generated: "2025-04-27T18:00:37.388450725Z"
