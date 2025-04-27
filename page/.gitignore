@@ -1,0 +1,23 @@
+# Não ignorar arquivos .tgz dos charts Helm
+!*.tgz
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Arquivos temporários
+tmp/
+temp/
+*.tmp
+*.bak
+*.swp 
