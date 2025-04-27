@@ -66,35 +66,39 @@ jobs:
           #!/bin/bash
           set -e
           
-          # Organizar os charts em pastas separadas
+          # Organizar os charts em pastas separadas diretamente na raiz
           for chart_package in .cr-release-packages/*.tgz; do
             if [ -f "$chart_package" ]; then
               # Extrair o nome do chart do arquivo .tgz (removendo a versão)
               chart_name=$(basename "$chart_package" | sed -E 's/(.+)-[0-9]+\.[0-9]+\.[0-9]+\.tgz/\1/')
               
-              # Criar diretório para o chart se não existir
-              mkdir -p "gh-pages/charts/$chart_name"
+              # Criar diretório para o chart se não existir (diretamente na raiz)
+              mkdir -p "gh-pages/$chart_name"
               
               # Copiar o pacote para a pasta específica do chart
-              cp "$chart_package" "gh-pages/charts/$chart_name/"
-              echo "Copiado $chart_package para gh-pages/charts/$chart_name/"
+              cp "$chart_package" "gh-pages/$chart_name/"
+              echo "Copiado $chart_package para gh-pages/$chart_name/"
             fi
           done
           
           # Entrar na pasta gh-pages
           cd gh-pages
           
-          # Criar index.yaml vazio inicial
+          # Listar a estrutura para debug
+          echo "Estrutura de diretórios:"
+          find . -type f -name "*.tgz" | sort
+          
+          # Criar um index.yaml vazio inicial
           echo "apiVersion: v1" > index.yaml
           echo "entries: {}" >> index.yaml
           echo "generated: \"$(date -u +"%Y-%m-%dT%H:%M:%SZ")\"" >> index.yaml
           
           # Para cada diretório de chart, adicionar ao index
-          for d in charts/*/; do
-            if [ -d "$d" ]; then
+          for d in */; do
+            if [ -d "$d" ] && [ "$d" != "charts/" ]; then
               chart_name=$(basename "$d")
               echo "Indexando $chart_name..."
-              repo_url="https://OWNER.github.io/REPO/charts/$chart_name"
+              repo_url="https://OWNER.github.io/REPO/$chart_name"
               helm repo index --url "$repo_url" --merge index.yaml "$d"
             fi
           done
