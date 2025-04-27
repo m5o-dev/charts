@@ -1,0 +1,12 @@
+apiVersion: v2
+name: exemplo
+description: Um chart de exemplo para demonstração
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+- exemplo
+- demonstracao
+maintainers:
+- name: m5o
+  url: https://github.com/m5o
