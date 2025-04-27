@@ -83,7 +83,7 @@ jobs:
           helm repo index --url https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/ .
           cat index.yaml | head -10
           cd ..
-          mv -r charts/index.yaml .
+          mv charts/index.yaml ./
 
           # Volta para o diretório raiz
           cd ..
