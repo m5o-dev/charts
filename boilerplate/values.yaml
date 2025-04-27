@@ -1,0 +1,249 @@
+# Default values for helm-boilerplate
+# This is a YAML-formatted file.
+
+namespace: default
+
+deployments:
+  app1:
+    enabled: true
+    replicas: 1
+    image:
+      repository: nginx
+      tag: "1.21.0"
+      pullPolicy: IfNotPresent
+    # Command e args para o container
+    command: []
+    # - "/bin/sh"
+    # - "-c"
+    args: []
+    # - "nginx -g 'daemon off;'"
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 50m
+        memory: 64Mi
+    ports:
+    - name: http
+      containerPort: 80
+      protocol: TCP
+    env:
+    - name: POD_NAME
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.name
+    # Use this section to define additional volume mounts
+    volumeMounts: []
+    # - name: config-volume
+    #   mountPath: /etc/config
+
+    # Use this section to define additional volumes 
+    volumes: []
+    # - name: config-volume
+    #   configMap:
+    #     name: app1-config
+
+    # app2:
+    #   enabled: false
+    #   replicas: 1
+    #   image:
+    #     repository: postgres
+    #     tag: "13.4"
+    #     pullPolicy: IfNotPresent
+    #   ports:
+    #     - containerPort: 5432
+    #       protocol: TCP
+
+services:
+  app1:
+    enabled: true
+    type: ClusterIP
+    ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
+    selector:
+      app: app1
+  # app2:
+  #   enabled: false
+  #   type: ClusterIP
+  #   ports:
+  #     - port: 5432
+  #       targetPort: 5432
+  #       protocol: TCP
+  #   selector:
+  #     app: app2
+
+configMaps:
+  app1-config:
+    enabled: true
+    data:
+      config.yaml: |
+        key1: value1
+        key2: value2
+      settings.json: |
+        {
+          "debug": false,
+          "logLevel": "info"
+        }
+  # app2-config:
+  #   enabled: false
+  #   data:
+  #     config.ini: |
+  #       server=true
+  #       port=5432 
+
+  # Traefik IngressRoute Configuration
+ingressRoutes:
+  app1:
+    enabled: true
+    entryPoints:
+    - web
+    - websecure
+    # Define routes for the IngressRoute
+    routes:
+    - match: Host(`app1.example.com`)
+      kind: Rule
+      priority: 10
+      services:
+      - name: app1
+        port: 80
+      middlewares: []
+      # - name: redirect-https
+      # TLS configuration
+    tls:
+      enabled: false
+      # certResolver: default
+      # domains:
+      #   - main: app1.example.com
+      #     sans:
+      #       - "*.app1.example.com"
+
+      # Example of another IngressRoute
+      # app2:
+      #   enabled: false
+      #   entryPoints:
+      #     - web
+      #     - websecure
+      #   routes:
+      #     - match: Host(`app2.example.com`)
+      #       kind: Rule
+      #       services:
+      #         - name: app2
+      #           port: 5432
+      #       middlewares: []
+      #   tls:
+      #     enabled: false
+
+      # Argo Rollouts Configuration
+rollouts:
+  app1:
+    enabled: false # Desabilitado por padrão, habilite quando precisar usar rollout em vez de deployment
+    replicas: 1
+    image:
+      repository: nginx
+      tag: "1.21.0"
+      pullPolicy: IfNotPresent
+    # Command e args para o container
+    command: []
+    # - "/bin/sh"
+    # - "-c" 
+    args: []
+    # - "nginx -g 'daemon off;'"
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 50m
+        memory: 64Mi
+    ports:
+    - name: http
+      containerPort: 80
+      protocol: TCP
+    env:
+    - name: POD_NAME
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.name
+    # Estratégia de atualização
+    strategy:
+      # Tipos: canary, blueGreen
+      type: canary
+      # Configuração específica para canary
+      canary:
+        # Porcentagem máxima de pods indisponíveis durante a atualização
+        maxUnavailable: 25%
+        # Número máximo de pods de canary a serem criados
+        maxSurge: 25%
+        # Etapas de canary
+        steps:
+        - setWeight: 20
+        - pause: { duration: 30s }
+        - setWeight: 40
+        - pause: { duration: 30s }
+        - setWeight: 60
+        - pause: { duration: 30s }
+        - setWeight: 80
+        - pause: { duration: 30s }
+      # Configuração específica para blueGreen
+      blueGreen:
+        # Serviço de preview
+        previewService: preview-service
+        # Serviço ativo
+        activeService: active-service
+        # Tempo de auto-promoção
+        autoPromotionEnabled: false
+        # Tempo de espera antes da promoção
+        autoPromotionSeconds: 30
+        # Análise pré-promoção
+        prePromotionAnalysis:
+          templates:
+          - templateName: success-rate
+          args:
+          - name: service-name
+            value: preview-service
+        # Análise pós-promoção
+        postPromotionAnalysis:
+          templates:
+          - templateName: success-rate
+          args:
+          - name: service-name
+            value: active-service
+        # Anti-affinity para pods blue/green
+        antiAffinity: true
+    # Volume mounts e volumes
+    volumeMounts: []
+    volumes: []
+    # Definições de sondagem de saúde
+    readinessProbe:
+      httpGet:
+        path: /
+        port: http
+      initialDelaySeconds: 10
+      periodSeconds: 5
+    livenessProbe:
+      httpGet:
+        path: /
+        port: http
+      initialDelaySeconds: 20
+      periodSeconds: 10
+    # Análise de métricas
+    analysis:
+      templates:
+      - name: success-rate
+        metricTemplates:
+        - name: success-rate
+          successCondition: result[0] >= 0.95
+          provider:
+            prometheus:
+              address: http://prometheus.monitoring:9090
+              query: |
+                sum(rate(
+                  istio_requests_total{reporter="source",destination_service=~"{{args.service-name}}",response_code!~"5.*"}[5m]
+                )) / 
+                sum(rate(
+                  istio_requests_total{reporter="source",destination_service=~"{{args.service-name}}"}[5m]
+                ))

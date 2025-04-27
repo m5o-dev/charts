@@ -1,0 +1,124 @@
+{{- range $name, $deployment := .Values.deployments }}
+{{- if $deployment.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $.Release.Name }}-{{ $name }}
+  namespace: {{ $.Values.namespace | default $.Release.Namespace }}
+  labels:
+    app: {{ $name }}
+    chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
+    release: {{ $.Release.Name }}
+spec:
+  replicas: {{ $deployment.replicas }}
+  selector:
+    matchLabels:
+      app: {{ $name }}
+      release: {{ $.Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ $name }}
+        release: {{ $.Release.Name }}
+    spec:
+      containers:
+      - name: {{ $name }}
+        image: {{ $deployment.image.repository }}:{{ $deployment.image.tag }}
+        imagePullPolicy: {{ $deployment.image.pullPolicy }}
+        {{- if $deployment.command }}
+        command:
+        {{- range $deployment.command }}
+        - {{ . | quote }}
+        {{- end }}
+        {{- end }}
+        {{- if $deployment.args }}
+        args:
+        {{- range $deployment.args }}
+        - {{ . | quote }}
+        {{- end }}
+        {{- end }}
+        {{- if $deployment.ports }}
+        ports:
+        {{- range $deployment.ports }}
+        - name: {{ .name | default "port" }}
+          containerPort: {{ .containerPort }}
+          protocol: {{ .protocol }}
+        {{- end }}
+        {{- end }}
+        {{- if $deployment.env }}
+        env:
+        {{- range $deployment.env }}
+        - name: {{ .name }}
+          {{- if .value }}
+          value: {{ .value | quote }}
+          {{- else if .valueFrom }}
+          valueFrom:
+            {{- if .valueFrom.fieldRef }}
+            fieldRef:
+              fieldPath: {{ .valueFrom.fieldRef.fieldPath }}
+            {{- end }}
+            {{- if .valueFrom.configMapKeyRef }}
+            configMapKeyRef:
+              name: {{ .valueFrom.configMapKeyRef.name }}
+              key: {{ .valueFrom.configMapKeyRef.key }}
+            {{- end }}
+            {{- if .valueFrom.secretKeyRef }}
+            secretKeyRef:
+              name: {{ .valueFrom.secretKeyRef.name }}
+              key: {{ .valueFrom.secretKeyRef.key }}
+            {{- end }}
+          {{- end }}
+        {{- end }}
+        {{- end }}
+        {{- if $deployment.resources }}
+        resources:
+          {{- if $deployment.resources.limits }}
+          limits:
+            {{- if $deployment.resources.limits.cpu }}
+            cpu: {{ $deployment.resources.limits.cpu }}
+            {{- end }}
+            {{- if $deployment.resources.limits.memory }}
+            memory: {{ $deployment.resources.limits.memory }}
+            {{- end }}
+          {{- end }}
+          {{- if $deployment.resources.requests }}
+          requests:
+            {{- if $deployment.resources.requests.cpu }}
+            cpu: {{ $deployment.resources.requests.cpu }}
+            {{- end }}
+            {{- if $deployment.resources.requests.memory }}
+            memory: {{ $deployment.resources.requests.memory }}
+            {{- end }}
+          {{- end }}
+        {{- end }}
+        {{- if $deployment.volumeMounts }}
+        volumeMounts:
+        {{- range $deployment.volumeMounts }}
+        - name: {{ .name }}
+          mountPath: {{ .mountPath }}
+          {{- if .subPath }}
+          subPath: {{ .subPath }}
+          {{- end }}
+        {{- end }}
+        {{- end }}
+      {{- if $deployment.volumes }}
+      volumes:
+      {{- range $deployment.volumes }}
+      - name: {{ .name }}
+        {{- if .configMap }}
+        configMap:
+          name: {{ .configMap.name }}
+        {{- end }}
+        {{- if .secret }}
+        secret:
+          secretName: {{ .secret.secretName }}
+        {{- end }}
+        {{- if .persistentVolumeClaim }}
+        persistentVolumeClaim:
+          claimName: {{ .persistentVolumeClaim.claimName }}
+        {{- end }}
+      {{- end }}
+      {{- end }}
+{{- end }}
+{{- end }} 

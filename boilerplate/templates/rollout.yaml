@@ -1,0 +1,196 @@
+{{- range $name, $rollout := .Values.rollouts }}
+{{- if $rollout.enabled }}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: {{ $.Release.Name }}-{{ $name }}
+  namespace: {{ $.Values.namespace | default $.Release.Namespace }}
+  labels:
+    app: {{ $name }}
+    chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
+    release: {{ $.Release.Name }}
+spec:
+  replicas: {{ $rollout.replicas }}
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: {{ $name }}
+      release: {{ $.Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ $name }}
+        release: {{ $.Release.Name }}
+    spec:
+      containers:
+      - name: {{ $name }}
+        image: {{ $rollout.image.repository }}:{{ $rollout.image.tag }}
+        imagePullPolicy: {{ $rollout.image.pullPolicy }}
+        {{- if $rollout.command }}
+        command:
+        {{- range $rollout.command }}
+        - {{ . | quote }}
+        {{- end }}
+        {{- end }}
+        {{- if $rollout.args }}
+        args:
+        {{- range $rollout.args }}
+        - {{ . | quote }}
+        {{- end }}
+        {{- end }}
+        {{- if $rollout.ports }}
+        ports:
+        {{- range $rollout.ports }}
+        - name: {{ .name | default "port" }}
+          containerPort: {{ .containerPort }}
+          protocol: {{ .protocol }}
+        {{- end }}
+        {{- end }}
+        {{- if $rollout.env }}
+        env:
+        {{- range $rollout.env }}
+        - name: {{ .name }}
+          {{- if .value }}
+          value: {{ .value | quote }}
+          {{- else if .valueFrom }}
+          valueFrom:
+            {{- if .valueFrom.fieldRef }}
+            fieldRef:
+              fieldPath: {{ .valueFrom.fieldRef.fieldPath }}
+            {{- end }}
+            {{- if .valueFrom.configMapKeyRef }}
+            configMapKeyRef:
+              name: {{ .valueFrom.configMapKeyRef.name }}
+              key: {{ .valueFrom.configMapKeyRef.key }}
+            {{- end }}
+            {{- if .valueFrom.secretKeyRef }}
+            secretKeyRef:
+              name: {{ .valueFrom.secretKeyRef.name }}
+              key: {{ .valueFrom.secretKeyRef.key }}
+            {{- end }}
+          {{- end }}
+        {{- end }}
+        {{- end }}
+        {{- if $rollout.resources }}
+        resources:
+          {{- if $rollout.resources.limits }}
+          limits:
+            {{- if $rollout.resources.limits.cpu }}
+            cpu: {{ $rollout.resources.limits.cpu }}
+            {{- end }}
+            {{- if $rollout.resources.limits.memory }}
+            memory: {{ $rollout.resources.limits.memory }}
+            {{- end }}
+          {{- end }}
+          {{- if $rollout.resources.requests }}
+          requests:
+            {{- if $rollout.resources.requests.cpu }}
+            cpu: {{ $rollout.resources.requests.cpu }}
+            {{- end }}
+            {{- if $rollout.resources.requests.memory }}
+            memory: {{ $rollout.resources.requests.memory }}
+            {{- end }}
+          {{- end }}
+        {{- end }}
+        {{- if $rollout.readinessProbe }}
+        readinessProbe:
+          {{- toYaml $rollout.readinessProbe | nindent 10 }}
+        {{- end }}
+        {{- if $rollout.livenessProbe }}
+        livenessProbe:
+          {{- toYaml $rollout.livenessProbe | nindent 10 }}
+        {{- end }}
+        {{- if $rollout.volumeMounts }}
+        volumeMounts:
+        {{- range $rollout.volumeMounts }}
+        - name: {{ .name }}
+          mountPath: {{ .mountPath }}
+          {{- if .subPath }}
+          subPath: {{ .subPath }}
+          {{- end }}
+        {{- end }}
+        {{- end }}
+      {{- if $rollout.volumes }}
+      volumes:
+      {{- range $rollout.volumes }}
+      - name: {{ .name }}
+        {{- if .configMap }}
+        configMap:
+          name: {{ .configMap.name }}
+        {{- end }}
+        {{- if .secret }}
+        secret:
+          secretName: {{ .secret.secretName }}
+        {{- end }}
+        {{- if .persistentVolumeClaim }}
+        persistentVolumeClaim:
+          claimName: {{ .persistentVolumeClaim.claimName }}
+        {{- end }}
+      {{- end }}
+      {{- end }}
+  {{- if $rollout.strategy }}
+  strategy:
+    {{- if eq $rollout.strategy.type "blueGreen" }}
+    blueGreen:
+      {{- if $rollout.strategy.blueGreen.activeService }}
+      activeService: {{ if $.Release.Name }}{{ $.Release.Name }}-{{ end }}{{ $rollout.strategy.blueGreen.activeService }}
+      {{- end }}
+      {{- if $rollout.strategy.blueGreen.previewService }}
+      previewService: {{ if $.Release.Name }}{{ $.Release.Name }}-{{ end }}{{ $rollout.strategy.blueGreen.previewService }}
+      {{- end }}
+      {{- if $rollout.strategy.blueGreen.autoPromotionEnabled }}
+      autoPromotionEnabled: {{ $rollout.strategy.blueGreen.autoPromotionEnabled }}
+      {{- end }}
+      {{- if $rollout.strategy.blueGreen.autoPromotionSeconds }}
+      autoPromotionSeconds: {{ $rollout.strategy.blueGreen.autoPromotionSeconds }}
+      {{- end }}
+      {{- if $rollout.strategy.blueGreen.prePromotionAnalysis }}
+      prePromotionAnalysis:
+        {{- toYaml $rollout.strategy.blueGreen.prePromotionAnalysis | nindent 8 }}
+      {{- end }}
+      {{- if $rollout.strategy.blueGreen.postPromotionAnalysis }}
+      postPromotionAnalysis:
+        {{- toYaml $rollout.strategy.blueGreen.postPromotionAnalysis | nindent 8 }}
+      {{- end }}
+      {{- if hasKey $rollout.strategy.blueGreen "antiAffinity" }}
+      antiAffinity: {{ $rollout.strategy.blueGreen.antiAffinity }}
+      {{- end }}
+    {{- else if eq $rollout.strategy.type "canary" }}
+    canary:
+      {{- if $rollout.strategy.canary.maxSurge }}
+      maxSurge: {{ $rollout.strategy.canary.maxSurge }}
+      {{- end }}
+      {{- if $rollout.strategy.canary.maxUnavailable }}
+      maxUnavailable: {{ $rollout.strategy.canary.maxUnavailable }}
+      {{- end }}
+      {{- if $rollout.strategy.canary.steps }}
+      steps:
+      {{- range $rollout.strategy.canary.steps }}
+      {{- if .setWeight }}
+      - setWeight: {{ .setWeight }}
+      {{- end }}
+      {{- if .pause }}
+      - pause:
+        {{- if .pause.duration }}
+          duration: {{ .pause.duration }}
+        {{- end }}
+        {{- if .pause.untilCanaryMetrics }}
+          untilCanaryMetrics:
+          {{- toYaml .pause.untilCanaryMetrics | nindent 12 }}
+        {{- end }}
+      {{- end }}
+      {{- if .analysis }}
+      - analysis:
+        {{- toYaml .analysis | nindent 10 }}
+      {{- end }}
+      {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+  {{- if $rollout.analysis }}
+  analysis:
+    {{- toYaml $rollout.analysis | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- end }} 

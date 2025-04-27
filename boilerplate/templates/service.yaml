@@ -1,0 +1,35 @@
+{{- range $name, $service := .Values.services }}
+{{- if $service.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $.Release.Name }}-{{ $name }}
+  namespace: {{ $.Values.namespace | default $.Release.Namespace }}
+  labels:
+    app: {{ $name }}
+    chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
+    release: {{ $.Release.Name }}
+spec:
+  type: {{ $service.type }}
+  ports:
+  {{- range $service.ports }}
+  - name: {{ .name | default "port" }}
+    port: {{ .port }}
+    targetPort: {{ .targetPort }}
+    {{- if .nodePort }}
+    nodePort: {{ .nodePort }}
+    {{- end }}
+    protocol: {{ .protocol }}
+  {{- end }}
+  selector:
+    {{- if $service.selector }}
+    {{- range $key, $value := $service.selector }}
+    {{ $key }}: {{ $value }}
+    {{- end }}
+    {{- else }}
+    app: {{ $name }}
+    release: {{ $.Release.Name }}
+    {{- end }}
+{{- end }}
+{{- end }} 

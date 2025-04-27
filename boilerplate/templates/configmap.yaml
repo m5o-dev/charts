@@ -1,0 +1,19 @@
+{{- range $name, $configMap := .Values.configMaps }}
+{{- if $configMap.enabled }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $.Release.Name }}-{{ $name }}
+  namespace: {{ $.Values.namespace | default $.Release.Namespace }}
+  labels:
+    app: {{ $name | replace "-config" "" }}
+    chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
+    release: {{ $.Release.Name }}
+data:
+  {{- range $key, $value := $configMap.data }}
+  {{ $key }}: |-
+    {{ $value | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- end }} 
