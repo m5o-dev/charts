@@ -30,6 +30,16 @@ jobs:
         uses: azure/setup-helm@v3
         with:
           version: v3.10.0
+      
+      - name: Setup Clean gh-pages Branch
+        run: |
+          git checkout -B gh-pages
+          git pull origin gh-pages --ff-only || true
+          git rm -rf .
+          git clean -fxd
+          git commit --allow-empty -m "Reset gh-pages branch"
+          git push --force origin gh-pages
+          git checkout main
           
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.6.0
@@ -38,6 +48,18 @@ jobs:
         with:
           charts_dir: charts
           config: cr-config.yaml
+          
+      - name: Generate and Push index.yaml
+        run: |
+          if [ -d ".cr-release-packages" ]; then
+            mkdir -p .cr-index
+            helm repo index --url https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/ .cr-release-packages --merge .cr-index/index.yaml || true
+            git checkout gh-pages
+            cp .cr-release-packages/index.yaml index.yaml || true
+            git add index.yaml
+            git commit -m "Update index.yaml" || true
+            git push origin gh-pages
+          fi
           
       - name: Verify gh-pages
         run: |
