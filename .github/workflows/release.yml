@@ -41,33 +41,27 @@ jobs:
             fi
           done
       
-      - name: Setup Fresh gh-pages Branch
+      - name: Create GitHub Pages
         run: |
-          # Cria uma branch completamente nova (orphan) para gh-pages
-          git checkout --orphan temp-gh-pages
-          git reset --hard
-          git commit --allow-empty -m "Initializing gh-pages branch"
-          git checkout main
-          git push origin -D gh-pages || true
-          git push origin temp-gh-pages:gh-pages
-          git branch -D temp-gh-pages
-      
-      - name: Upload Packaged Charts
-        run: |
-          # Clone a branch gh-pages limpa
-          git clone --single-branch --branch gh-pages https://${GITHUB_ACTOR}:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git gh-pages
+          # Cria uma diretório temporário para gh-pages
+          mkdir -p gh-pages
           
           # Copia os pacotes para a pasta gh-pages
           cp .cr-release-packages/*.tgz gh-pages/
           
-          # Gera o index.yaml
+          # Gera o index.yaml na pasta gh-pages
           cd gh-pages
           helm repo index --url https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/ .
           
-          # Commit e push
-          git add .
-          git commit -m "Update Helm repository"
-          git push
+          # Volta para o diretório raiz
+          cd ..
+          
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./gh-pages
+          force_orphan: true
           
       - name: Cleanup
         run: |
