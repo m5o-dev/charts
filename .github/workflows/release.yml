@@ -36,8 +36,15 @@ jobs:
           mkdir -p .cr-release-packages
           for chart in charts/*; do
             if [ -d "$chart" ]; then
+              # Obter o nome do chart a partir do diretório
+              chart_name=$(basename "$chart")
+              
+              # Extrair a versão do chart
+              chart_version=$(grep -m 1 'version:' "$chart/Chart.yaml" | awk '{print $2}')
+              
+              # Empacotar o chart
               helm package "$chart" -d .cr-release-packages/
-              echo "Packaged $(basename $chart)"
+              echo "Packaged $chart_name v$chart_version"
             fi
           done
           
@@ -53,15 +60,24 @@ jobs:
             echo "Copiados arquivos da pasta page para gh-pages"
           fi
           
-          # Copia os pacotes para a pasta gh-pages
-          cp .cr-release-packages/*.tgz gh-pages/
-          
-          # Criar arquivo .nojekyll se não existir
-          touch gh-pages/.nojekyll
+          # Organizar os charts em pastas separadas
+          for chart_package in .cr-release-packages/*.tgz; do
+            if [ -f "$chart_package" ]; then
+              # Extrair o nome do chart do arquivo .tgz (removendo a versão)
+              chart_name=$(basename "$chart_package" | sed -E 's/(.+)-[0-9]+\.[0-9]+\.[0-9]+\.tgz/\1/')
+              
+              # Criar diretório para o chart se não existir
+              mkdir -p "gh-pages/charts/$chart_name"
+              
+              # Copiar o pacote para a pasta específica do chart
+              cp "$chart_package" "gh-pages/charts/$chart_name/"
+              echo "Copiado $chart_package para gh-pages/charts/$chart_name/"
+            fi
+          done
           
           # Gera o index.yaml na pasta gh-pages
           cd gh-pages
-          helm repo index --url https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/ .
+          helm repo index --url https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/charts/ .
           
           # Volta para o diretório raiz
           cd ..
