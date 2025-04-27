@@ -52,7 +52,7 @@ jobs:
         run: |
           # Clonar a branch gh-pages para preservar o conteúdo existente
           git clone --branch gh-pages https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git gh-pages || {
-            # Se a branch gh-pages não existir, criar um diretório vazio
+            # Se a branch gh-pages não existe ainda, criar um diretório vazio
             echo "Branch gh-pages não existe ainda, criando diretório vazio"
             mkdir -p gh-pages
           }
@@ -61,11 +61,12 @@ jobs:
           
       - name: Prepare GitHub Pages Content
         run: |
-          # Copiar todos os pacotes para o diretório raiz da gh-pages (para indexação)
-          cp .cr-release-packages/*.tgz gh-pages/
-          echo "Copiados todos os pacotes para o diretório raiz de gh-pages para indexação"
+          # Criar script para indexação
+          cat > update-index.sh << 'EOF'
+          #!/bin/bash
+          set -e
           
-          # Organizar os charts em pastas separadas (para organização)
+          # Organizar os charts em pastas separadas
           for chart_package in .cr-release-packages/*.tgz; do
             if [ -f "$chart_package" ]; then
               # Extrair o nome do chart do arquivo .tgz (removendo a versão)
@@ -80,18 +81,40 @@ jobs:
             fi
           done
           
-          # Gera o index.yaml na pasta gh-pages
+          # Entrar na pasta gh-pages
           cd gh-pages
-          echo "Gerando index.yaml em $(pwd) com URL base https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
-          find . -type f -name "*.tgz" | sort
           
-          # Gerar o index.yaml padrão (encontra apenas arquivos no diretório atual, mas agora todos estão no raiz)
-          helm repo index --url https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/ .
+          # Criar index.yaml vazio inicial
+          echo "apiVersion: v1" > index.yaml
+          echo "entries: {}" >> index.yaml
+          echo "generated: \"$(date -u +"%Y-%m-%dT%H:%M:%SZ")\"" >> index.yaml
+          
+          # Para cada diretório de chart, adicionar ao index
+          for d in charts/*/; do
+            if [ -d "$d" ]; then
+              chart_name=$(basename "$d")
+              echo "Indexando $chart_name..."
+              repo_url="https://OWNER.github.io/REPO/charts/$chart_name"
+              helm repo index --url "$repo_url" --merge index.yaml "$d"
+            fi
+          done
+          
+          # Mostrar o resultado
+          echo "Conteúdo final do index.yaml:"
           cat index.yaml | head -20
           
-          # Volta para o diretório raiz
+          # Voltar para o diretório raiz
           cd ..
+          EOF
           
+          # Substituir placeholders com valores reais
+          sed -i "s/OWNER/${{ github.repository_owner }}/g" update-index.sh
+          sed -i "s/REPO/${{ github.event.repository.name }}/g" update-index.sh
+          
+          # Executar script
+          chmod +x update-index.sh
+          ./update-index.sh
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
@@ -103,3 +126,4 @@ jobs:
         run: |
           rm -rf gh-pages
           rm -rf .cr-release-packages
+          rm -f update-index.sh
