@@ -48,18 +48,19 @@ jobs:
             fi
           done
           
+      - name: Checkout gh-pages Branch
+        run: |
+          # Clonar a branch gh-pages para preservar o conteúdo existente
+          git clone --branch gh-pages https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git gh-pages || {
+            # Se a branch gh-pages não existir, criar um diretório vazio
+            echo "Branch gh-pages não existe ainda, criando diretório vazio"
+            mkdir -p gh-pages
+          }
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
       - name: Prepare GitHub Pages Content
         run: |
-          # Criar diretório gh-pages e copiar conteúdo da pasta page se existir
-          mkdir -p gh-pages
-          
-          # Copiar conteúdo da pasta page se existir
-          if [ -d "page" ]; then
-            cp -r page/* gh-pages/ 2>/dev/null || true
-            cp -r page/.* gh-pages/ 2>/dev/null || true
-            echo "Copiados arquivos da pasta page para gh-pages"
-          fi
-          
           # Organizar os charts em pastas separadas
           for chart_package in .cr-release-packages/*.tgz; do
             if [ -f "$chart_package" ]; then
@@ -77,7 +78,10 @@ jobs:
           
           # Gera o index.yaml na pasta gh-pages
           cd gh-pages
+          echo "Gerando index.yaml em $(pwd) com URL base https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
+          find . -type f -name "*.tgz" | sort
           helm repo index --url https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/ .
+          cat index.yaml | head -10
           
           # Volta para o diretório raiz
           cd ..
