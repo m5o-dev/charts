@@ -77,12 +77,14 @@ jobs:
           done
           
           # Gera o index.yaml na pasta gh-pages
-          cd gh-pages
+          cd gh-pages/charts
           echo "Gerando index.yaml em $(pwd) com URL base https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
           find . -type f -name "*.tgz" | sort
           helm repo index --url https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/ .
           cat index.yaml | head -10
-          
+          cd ..
+          mv -r charts/index.yaml .
+
           # Volta para o diretório raiz
           cd ..
           
