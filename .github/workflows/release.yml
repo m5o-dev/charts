@@ -49,6 +49,9 @@ jobs:
           # Copia os pacotes para a pasta gh-pages
           cp .cr-release-packages/*.tgz gh-pages/
           
+          # Cria arquivo .nojekyll para evitar processamento Jekyll
+          touch gh-pages/.nojekyll
+          
           # Gera o index.yaml na pasta gh-pages
           cd gh-pages
           helm repo index --url https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/ .
