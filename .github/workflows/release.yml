@@ -101,6 +101,10 @@ jobs:
           # Copiar o index.yaml da pasta charts/ para a raiz
           cp charts/index.yaml .
           echo "Copiado index.yaml da pasta charts/ para a raiz"
+
+          # Deleta o index.yaml da pasta charts/
+          rm -f charts/index.yaml
+          echo "Deletado index.yaml da pasta charts/"
           
           # Voltar para o diretório raiz
           cd ..
