@@ -61,7 +61,11 @@ jobs:
           
       - name: Prepare GitHub Pages Content
         run: |
-          # Organizar os charts em pastas separadas
+          # Copiar todos os pacotes para o diretório raiz da gh-pages (para indexação)
+          cp .cr-release-packages/*.tgz gh-pages/
+          echo "Copiados todos os pacotes para o diretório raiz de gh-pages para indexação"
+          
+          # Organizar os charts em pastas separadas (para organização)
           for chart_package in .cr-release-packages/*.tgz; do
             if [ -f "$chart_package" ]; then
               # Extrair o nome do chart do arquivo .tgz (removendo a versão)
@@ -77,14 +81,14 @@ jobs:
           done
           
           # Gera o index.yaml na pasta gh-pages
-          cd gh-pages/charts
+          cd gh-pages
           echo "Gerando index.yaml em $(pwd) com URL base https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
           find . -type f -name "*.tgz" | sort
+          
+          # Gerar o index.yaml padrão (encontra apenas arquivos no diretório atual, mas agora todos estão no raiz)
           helm repo index --url https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/ .
-          cat index.yaml | head -10
-          cd ..
-          mv charts/index.yaml ./
-
+          cat index.yaml | head -20
+          
           # Volta para o diretório raiz
           cd ..
           
