@@ -3,7 +3,17 @@ entries:
   helm-boilerplate:
   - apiVersion: v2
     appVersion: 0.0.1
-    created: "2025-04-27T23:49:07.489124516Z"
+    created: "2025-04-27T23:50:18.252432599Z"
+    description: A flexible Helm chart boilerplate for creating any Kubernetes resources
+    digest: e56dddaa8c2d01fc1ade3727c7605d63d86d838da4d81f111c772c5ffbc75b53
+    name: helm-boilerplate
+    type: application
+    urls:
+    - https://m5o-dev.github.io/charts/charts/helm-boilerplate/helm-boilerplate-0.0.2.tgz
+    version: 0.0.2
+  - apiVersion: v2
+    appVersion: 0.0.1
+    created: "2025-04-27T23:50:18.252104548Z"
     description: A flexible Helm chart boilerplate for creating any Kubernetes resources
     digest: 2f00617a1a4030be50355f6ba9fdff4c0e605ddc2ad33c5a910ebc6fae42a611
     name: helm-boilerplate
@@ -14,7 +24,21 @@ entries:
   postgresql:
   - apiVersion: v2
     appVersion: 0.0.1
-    created: "2025-04-27T23:49:07.489887361Z"
+    created: "2025-04-27T23:50:18.253854829Z"
+    dependencies:
+    - name: helm-boilerplate
+      repository: file://../boilerplate
+      version: '>=0.0.1'
+    description: PostgreSQL chart using the boilerplate
+    digest: 90823280d9e8fca1b7010e07051aa04a2b3468723acb2f7e277e6fc71ac5486b
+    name: postgresql
+    type: application
+    urls:
+    - https://m5o-dev.github.io/charts/charts/postgresql/postgresql-0.0.2.tgz
+    version: 0.0.2
+  - apiVersion: v2
+    appVersion: 0.0.1
+    created: "2025-04-27T23:50:18.253182166Z"
     dependencies:
     - name: helm-boilerplate
       repository: file://../boilerplate
@@ -26,4 +50,4 @@ entries:
     urls:
     - https://m5o-dev.github.io/charts/charts/postgresql/postgresql-0.0.1.tgz
     version: 0.0.1
-generated: "2025-04-27T23:49:07.488641413Z"
+generated: "2025-04-27T23:50:18.251634011Z"
