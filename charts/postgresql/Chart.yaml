@@ -2,7 +2,7 @@ apiVersion: v2
 name: postgresql
 description: PostgreSQL chart using the boilerplate
 type: application
-version: 0.0.1
+version: 0.0.2
 appVersion: "0.0.1"
 
 # Dependência do chart boilerplate
