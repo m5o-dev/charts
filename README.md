@@ -6,7 +6,7 @@ Este é o repositório Helm hospedado via GitHub Pages do projeto [m5o-dev/chart
 
 Esta branch contém:
 
-- Pacotes de charts Helm (arquivos `.tgz`)
+- Pacotes de charts Helm organizados em diretórios dedicados (`charts/{nome-do-chart}/*.tgz`)
 - Arquivo `index.yaml` para indexação dos charts
 - Este README explicativo
 
@@ -24,6 +24,27 @@ Para listar os charts disponíveis:
 ```bash
 helm search repo m5o-charts
 ```
+
+Para instalar um chart específico:
+
+```bash
+helm install my-release m5o-charts/{nome-do-chart}
+```
+
+## Estrutura do Repositório
+
+Os charts Helm são organizados da seguinte maneira:
+
+```
+/charts
+  /{nome-do-chart-1}
+    /{nome-do-chart-1}-1.0.0.tgz
+    /{nome-do-chart-1}-1.0.1.tgz
+  /{nome-do-chart-2}
+    /{nome-do-chart-2}-2.0.0.tgz
+```
+
+Isso permite manter múltiplas versões de cada chart no repositório.
 
 ## Desenvolvimento
 
