@@ -5,19 +5,36 @@ on:
       - main
     paths:
       - 'charts/**'
+  workflow_dispatch:
+
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          
       - name: Configure Git
         run: |
           git config user.name "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+          
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: v3.10.0
+          
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.6.0
         env:
           CR_TOKEN: ${{ secrets.CR_TOKEN }}
         with:
           charts_dir: charts
+          config: cr-config.yaml
+          
+      - name: Verify gh-pages
+        run: |
+          echo "Verificando se a branch gh-pages foi atualizada corretamente"
+          git fetch origin gh-pages || echo "Branch gh-pages ainda não existe"
