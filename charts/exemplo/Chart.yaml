@@ -2,8 +2,8 @@ apiVersion: v2
 name: exemplo
 description: Um chart de exemplo para demonstração
 type: application
-version: 0.1.1
-appVersion: "1.0.0"
+version: 0.1.2
+appVersion: "1.0.2"
 keywords:
 - exemplo
 - demonstracao
