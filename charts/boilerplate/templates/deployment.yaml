@@ -4,7 +4,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ $.Release.Name }}-{{ $name }}
+  name: {{ $name }}-deployment
   namespace: {{ $.Values.namespace | default $.Release.Namespace }}
   labels:
     app: {{ $name }}
@@ -116,7 +116,7 @@ spec:
         {{- end }}
         {{- if .persistentVolumeClaim }}
         persistentVolumeClaim:
-          claimName: {{ .persistentVolumeClaim.claimName }}
+          claimName: {{ .persistentVolumeClaim.claimName }}-pvc
         {{- end }}
       {{- end }}
       {{- end }}

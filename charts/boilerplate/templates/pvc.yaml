@@ -1,0 +1,35 @@
+{{- range $name, $pvc := .Values.persistentVolumeClaims }}
+{{- if $pvc.enabled }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ $name }}-pvc
+  namespace: {{ $.Values.namespace | default $.Release.Namespace }}
+  labels:
+    app: {{ $pvc.name | default $name }}
+    chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
+    release: {{ $.Release.Name }}
+  {{- if $pvc.annotations }}
+  annotations:
+    {{- range $key, $value := $pvc.annotations }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
+  {{- end }}
+spec:
+  accessModes:
+  {{- range $pvc.accessModes }}
+  - {{ . }}
+  {{- end }}
+  {{- if $pvc.storageClassName }}
+  storageClassName: {{ $pvc.storageClassName }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ $pvc.storage }}
+  {{- if $pvc.selector }}
+  selector:
+    {{- toYaml $pvc.selector | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- end }} 

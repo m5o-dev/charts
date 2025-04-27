@@ -1,6 +1,6 @@
 apiVersion: v2
 name: helm-boilerplate
-description: A Helm chart boilerplate for Kubernetes applications
+description: A flexible Helm chart boilerplate for creating any Kubernetes resources
 type: application
-version: 0.0.2
+version: 0.1.1
 appVersion: "0.0.1"

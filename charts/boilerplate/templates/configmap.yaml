@@ -4,7 +4,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ $.Release.Name }}-{{ $name }}
+  name: {{ $name }}-configmap
   namespace: {{ $.Values.namespace | default $.Release.Namespace }}
   labels:
     app: {{ $name | replace "-config" "" }}

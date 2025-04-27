@@ -4,7 +4,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
-  name: {{ $.Release.Name }}-{{ $name }}
+  name: {{ $name }}-rollout
   namespace: {{ $.Values.namespace | default $.Release.Namespace }}
   labels:
     app: {{ $name }}
@@ -134,10 +134,10 @@ spec:
     {{- if eq $rollout.strategy.type "blueGreen" }}
     blueGreen:
       {{- if $rollout.strategy.blueGreen.activeService }}
-      activeService: {{ if $.Release.Name }}{{ $.Release.Name }}-{{ end }}{{ $rollout.strategy.blueGreen.activeService }}
+      activeService: {{ $.Release.Name }}-service
       {{- end }}
       {{- if $rollout.strategy.blueGreen.previewService }}
-      previewService: {{ if $.Release.Name }}{{ $.Release.Name }}-{{ end }}{{ $rollout.strategy.blueGreen.previewService }}
+      previewService: {{ $.Release.Name }}-preview-service
       {{- end }}
       {{- if $rollout.strategy.blueGreen.autoPromotionEnabled }}
       autoPromotionEnabled: {{ $rollout.strategy.blueGreen.autoPromotionEnabled }}

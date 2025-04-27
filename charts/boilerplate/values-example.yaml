@@ -1,0 +1,130 @@
+# Exemplo de valores personalizados para o helm-boilerplate
+# Use este arquivo como referência para criar seu próprio values-custom.yaml
+
+# Deployment exemplo
+deployments:
+  myapp:
+    enabled: true # Habilita a criação do deployment
+    replicas: 2
+    image:
+      repository: myregistry/myapp
+      tag: "1.0.0"
+      pullPolicy: Always
+    ports:
+    - name: http
+      containerPort: 8080
+      protocol: TCP
+    env:
+    - name: NODE_ENV
+      value: production
+    - name: LOG_LEVEL
+      value: info
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 256Mi
+    volumeMounts:
+    - name: data-volume
+      mountPath: /app/data
+    volumes:
+    - name: data-volume
+      persistentVolumeClaim:
+        claimName: myapp-data
+
+# Serviço para o deployment
+services:
+  myapp:
+    enabled: true # Habilita a criação do serviço
+    type: ClusterIP
+    ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
+    selector:
+      app: myapp
+
+# ConfigMap para configurações
+configMaps:
+  myapp-config:
+    enabled: true # Habilita a criação do configmap
+    data:
+      app-config.yaml: |
+        database:
+          host: postgres
+          port: 5432
+          user: ${DB_USER}
+          password: ${DB_PASSWORD}
+        server:
+          port: 8080
+          timeout: 30s
+
+# IngressRoute para expor a aplicação
+ingressRoutes:
+  myapp:
+    enabled: true # Habilita a criação do ingressroute
+    entryPoints:
+    - web
+    - websecure
+    routes:
+    - match: Host(`myapp.example.com`)
+      kind: Rule
+      services:
+      - name: myapp
+        port: 80
+      middlewares:
+      - name: redirect-https
+    tls:
+      enabled: true
+      certResolver: default
+
+# Persistent Volume Claims para armazenamento
+persistentVolumeClaims:
+  myapp-data:
+    enabled: true # Habilita a criação do PVC
+    appName: myapp # Nome da aplicação que usará este PVC (para labels)
+    accessModes:
+    - ReadWriteOnce
+    storageClassName: standard
+    storage: 10Gi
+    annotations:
+      helm.sh/resource-policy: keep # Mantém o PVC quando o release é removido
+
+  # Exemplo de PVC para banco de dados
+  database-data:
+    enabled: true
+    appName: database
+    accessModes:
+    - ReadWriteOnce
+    storageClassName: premium
+    storage: 20Gi
+    annotations:
+      backup.velero.io/backup-volumes: database-data
+
+# Exemplo de Argo Rollout (alternativa ao Deployment para deploys progressivos)
+# Nota: Não use Deployment e Rollout para o mesmo aplicativo
+rollouts:
+  myapp-rollout:
+    enabled: false # Mantenha desabilitado se estiver usando o Deployment acima
+    replicas: 2
+    image:
+      repository: myregistry/myapp
+      tag: "1.0.0"
+      pullPolicy: Always
+    strategy:
+      type: canary
+      canary:
+        maxUnavailable: 25%
+        maxSurge: 25%
+        steps:
+        - setWeight: 20
+        - pause: { duration: 1m }
+        - setWeight: 40
+        - pause: { duration: 1m }
+        - setWeight: 60
+        - pause: { duration: 1m }
+        - setWeight: 80
+        - pause: { duration: 1m }

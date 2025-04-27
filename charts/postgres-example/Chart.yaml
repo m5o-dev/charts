@@ -1,0 +1,12 @@
+apiVersion: v2
+name: postgres-example
+description: PostgreSQL chart using the boilerplate
+type: application
+version: 0.1.0
+appVersion: "13.4"
+
+# Dependência do chart boilerplate
+dependencies:
+- name: helm-boilerplate
+  version: ">=0.1.0"
+  repository: "file://../boilerplate"

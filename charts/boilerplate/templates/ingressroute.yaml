@@ -4,7 +4,7 @@
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
-  name: {{ $.Release.Name }}-{{ $name }}
+  name: {{ $name }}-ingressroute
   namespace: {{ $.Values.namespace | default $.Release.Namespace }}
   labels:
     app: {{ $name }}
@@ -24,7 +24,7 @@ spec:
     {{- end }}
     services:
     {{- range .services }}
-    - name: {{ if $.Release.Name }}{{ $.Release.Name }}-{{ end }}{{ .name }}
+    - name: {{ $.Release.Name }}-service
       port: {{ .port }}
       {{- if .weight }}
       weight: {{ .weight }}
@@ -39,7 +39,7 @@ spec:
     {{- if .middlewares }}
     middlewares:
     {{- range .middlewares }}
-    - name: {{ if $.Release.Name }}{{ $.Release.Name }}-{{ end }}{{ .name }}
+    - name: {{ $.Release.Name }}-{{ .name }}
     {{- end }}
     {{- end }}
   {{- end }}

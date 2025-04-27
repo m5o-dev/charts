@@ -1,6 +1,6 @@
 # Helm Boilerplate
 
-Este é um chart Helm boilerplate que serve como base para projetos Kubernetes, permitindo a criação flexível de recursos como Deployments, Services, ConfigMaps, IngressRoutes e Rollouts através de arquivos de valores.
+Este é um chart Helm boilerplate que serve como biblioteca para criar recursos Kubernetes. O chart foi projetado como uma biblioteca (`type: library`) para ser utilizado como dependência em outros charts Helm.
 
 ## Funcionalidades
 
@@ -16,8 +16,8 @@ Este é um chart Helm boilerplate que serve como base para projetos Kubernetes, 
 ## Estrutura
 
 ```
-chart/
-├── Chart.yaml            # Metadados do chart
+boilerplate/
+├── Chart.yaml            # Metadados do chart (type: library)
 ├── values.yaml           # Valores padrão de configuração
 └── templates/            # Templates dos recursos Kubernetes
     ├── deployment.yaml   # Template para Deployments
@@ -27,14 +27,59 @@ chart/
     └── rollout.yaml      # Template para Argo Rollouts
 ```
 
-## Uso
+## Dois modos de uso
 
-1. Ajuste o arquivo `values.yaml` de acordo com suas necessidades
-2. Instale o chart:
+### 1. Como dependência em outros charts
+
+O método recomendado é usar este chart como dependência em seus charts específicos (PostgreSQL, Redis, aplicações, etc):
+
+1. Adicione o boilerplate como dependência no seu `Chart.yaml`:
+
+```yaml
+dependencies:
+  - name: helm-boilerplate
+    version: ">=0.1.0"
+    repository: "file://../boilerplate"  # Ou use um repositório Helm real
+```
+
+2. Configure os recursos no `values.yaml` do seu chart, sob a chave `helm-boilerplate`:
+
+```yaml
+helm-boilerplate:
+  deployments:
+    myapp:
+      enabled: true
+      # Outras configurações...
+```
+
+3. Adicione templates específicos para recursos não suportados pelo boilerplate.
+
+Veja o diretório `charts/postgres-example` para um exemplo completo.
+
+### 2. Como chart independente com valores customizados
+
+Para casos simples, você também pode usar o boilerplate diretamente:
+
+1. Crie um arquivo `values-custom.yaml` com os recursos que deseja habilitar:
+
+```yaml
+deployments:
+  myapp:
+    enabled: true  # Importante: habilita a criação do recurso
+    # Outras configurações do deployment
+```
+
+2. Instale o chart usando seu arquivo de valores personalizado:
 
 ```bash
-helm install meu-app ./chart
+helm install meu-app ./charts/boilerplate -f values-custom.yaml
 ```
+
+## Importante
+
+- Por padrão, **nenhum recurso será criado** ao instalar o chart sem valores personalizados
+- Para criar recursos, você deve explicitamente definir `enabled: true` para cada recurso em seu arquivo de valores
+- Os exemplos no arquivo values.yaml principal estão todos com `enabled: false`
 
 ## Configuração
 
@@ -122,7 +167,7 @@ ingressRoutes:
 ```yaml
 rollouts:
   app1:
-    enabled: false                     # Habilita a criação do rollout (desabilitado por padrão)
+    enabled: true                     # Habilita a criação do rollout
     replicas: 1                        # Número de réplicas
     image:
       repository: nginx                # Repositório da imagem
@@ -147,10 +192,40 @@ rollouts:
         autoPromotionEnabled: false    # Auto-promoção de versão
 ```
 
-## Personalização
+## Criação de novos charts usando o boilerplate
 
-Para personalizar o chart, você pode:
+Para criar um novo chart que utilize o boilerplate:
 
-1. Adicionar novos tipos de recursos no arquivo `values.yaml`
-2. Adicionar novos templates na pasta `templates/`
-3. Estender as definições de recursos existentes no values.yaml 
+1. Crie uma nova pasta para seu chart: `mkdir -p charts/meu-servico`
+2. Adicione um `Chart.yaml` com a dependência para o boilerplate:
+
+```yaml
+apiVersion: v2
+name: meu-servico
+description: Meu serviço usando boilerplate
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+
+dependencies:
+  - name: helm-boilerplate
+    version: ">=0.1.0"
+    repository: "file://../boilerplate" # Ou seu repositório Helm
+```
+
+3. Crie um arquivo `values.yaml` com suas configurações específicas:
+
+```yaml
+# Valores para o meu-servico
+
+# Configurações do boilerplate
+helm-boilerplate:
+  deployments:
+    meu-app:
+      enabled: true
+      # ... configurações específicas
+```
+
+4. Adicione templates adicionais específicos em `templates/` conforme necessário.
+
+Veja o exemplo completo em `charts/postgres-example/` para referência. 

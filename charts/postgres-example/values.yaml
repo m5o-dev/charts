@@ -1,0 +1,77 @@
+# Valores para o chart postgres-example
+
+# Passa valores para o subchart boilerplate
+helm-boilerplate:
+  deployments:
+    postgres:
+      enabled: true
+      replicas: 1
+      image:
+        repository: postgres
+        tag: "13.4"
+        pullPolicy: IfNotPresent
+      ports:
+      - name: postgres
+        containerPort: 5432
+        protocol: TCP
+      env:
+      - name: POSTGRES_USER
+        value: postgres
+      - name: POSTGRES_PASSWORD
+        value: postgres
+      - name: POSTGRES_DB
+        value: mydb
+      resources:
+        limits:
+          cpu: 1000m
+          memory: 2Gi
+        requests:
+          cpu: 500m
+          memory: 1Gi
+      volumeMounts:
+      - name: postgres-data
+        mountPath: /var/lib/postgresql/data
+      volumes:
+      - name: postgres-data
+        persistentVolumeClaim:
+          claimName: postgres-data
+
+  services:
+    postgres:
+      enabled: true
+      type: ClusterIP
+      ports:
+      - name: postgres
+        port: 5432
+        targetPort: postgres
+        protocol: TCP
+      selector:
+        app: postgres
+
+  # ConfigMaps para o PostgreSQL
+  configMaps:
+    postgres-config:
+      enabled: true
+      data:
+        postgresql.conf: |
+          max_connections = 100
+          shared_buffers = 256MB
+          effective_cache_size = 768MB
+          work_mem = 2MB
+          maintenance_work_mem = 64MB
+          min_wal_size = 80MB
+          max_wal_size = 1GB
+          checkpoint_completion_target = 0.7
+          wal_buffers = 8MB
+          default_statistics_target = 100
+
+  # PVC para dados do PostgreSQL (criado pelo boilerplate)
+  persistentVolumeClaims:
+    postgres-data:
+      enabled: true
+      accessModes:
+      - ReadWriteOnce
+      storageClassName: local-path
+      storage: 10Gi
+      annotations:
+        helm.sh/resource-policy: keep
