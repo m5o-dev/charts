@@ -71,7 +71,6 @@ helm-boilerplate:
       enabled: true
       accessModes:
       - ReadWriteOnce
-      storageClassName: local-path
       storage: 10Gi
       annotations:
         helm.sh/resource-policy: keep
