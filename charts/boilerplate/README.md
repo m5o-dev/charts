@@ -7,6 +7,7 @@ Este é um chart Helm boilerplate que serve como biblioteca para criar recursos 
 - Criação dinâmica de Deployments com base nas configurações do values.yaml
 - Criação dinâmica de Services com base nas configurações do values.yaml
 - Criação dinâmica de ConfigMaps com base nas configurações do values.yaml
+- Criação dinâmica de Secrets com base nas configurações do values.yaml
 - Criação dinâmica de PersistentVolumeClaims com base nas configurações do values.yaml
 - Criação dinâmica de IngressRoutes do Traefik com base nas configurações do values.yaml
 - Criação dinâmica de Argo Rollouts com base nas configurações do values.yaml
@@ -24,6 +25,7 @@ boilerplate/
     ├── deployment.yaml   # Template para Deployments
     ├── service.yaml      # Template para Services
     ├── configmap.yaml    # Template para ConfigMaps
+    ├── secrets.yaml      # Template para Secrets
     ├── pvc.yaml          # Template para PersistentVolumeClaims
     ├── ingressroute.yaml # Template para IngressRoutes do Traefik
     └── rollout.yaml      # Template para Argo Rollouts
@@ -197,6 +199,30 @@ configMaps:
       allowed_origins: |
         https://example.com
         https://api.example.com
+```
+
+### Secrets
+
+```yaml
+secrets:
+  app-secrets:
+    enabled: true                    # Habilita a criação do Secret
+    type: Opaque                     # Tipo do Secret (Opaque, kubernetes.io/tls, etc.)
+    data:                            # Dados do Secret (serão codificados em base64 automaticamente)
+      db_password: senha123
+      api_key: minha-chave-secreta
+    stringData:                      # Dados do Secret que não precisam ser codificados em base64
+      config.json: |
+        {
+          "clientId": "client123",
+          "environment": "production"
+        }
+  tls-cert:
+    enabled: true
+    type: kubernetes.io/tls
+    data:
+      tls.crt: cert-content-here
+      tls.key: key-content-here
 ```
 
 ### PersistentVolumeClaims

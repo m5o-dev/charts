@@ -101,6 +101,29 @@ configMaps:
         https://example.com
         https://api.example.com
 
+# Secrets
+secrets:
+  app-secrets:
+    enabled: true # Habilita a criação do Secret
+    type: Opaque # Tipo do Secret (Opaque, kubernetes.io/tls, etc.)
+    data:
+      # Dados do Secret (serão codificados em base64 automaticamente)
+      db_password: senha123
+      api_key: minha-chave-secreta
+    stringData:
+      # Dados do Secret que não precisam ser codificados em base64
+      config.json: |
+        {
+          "clientId": "client123",
+          "environment": "production"
+        }
+  tls-cert:
+    enabled: true
+    type: kubernetes.io/tls
+    data:
+      tls.crt: cert-content-here
+      tls.key: key-content-here
+
 # PersistentVolumeClaims
 persistentVolumeClaims:
   app-data:
