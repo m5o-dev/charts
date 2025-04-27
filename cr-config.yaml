@@ -1,7 +1,0 @@
-index-path: index.yaml
-owner: ${GITHUB_REPOSITORY_OWNER}
-pages-branch: gh-pages
-charts-repo-url: https://${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY#*/}
-push: true
-release-notes-file: ""
-packages-with-index: true

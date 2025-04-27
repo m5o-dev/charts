@@ -31,37 +31,45 @@ jobs:
         with:
           version: v3.10.0
       
-      - name: Setup Clean gh-pages Branch
+      - name: Package Charts
         run: |
-          git checkout -B gh-pages
-          git pull origin gh-pages --ff-only || true
-          git rm -rf .
-          git clean -fxd
-          git commit --allow-empty -m "Reset gh-pages branch"
-          git push --force origin gh-pages
+          mkdir -p .cr-release-packages
+          for chart in charts/*; do
+            if [ -d "$chart" ]; then
+              helm package "$chart" -d .cr-release-packages/
+              echo "Packaged $(basename $chart)"
+            fi
+          done
+      
+      - name: Setup Fresh gh-pages Branch
+        run: |
+          # Cria uma branch completamente nova (orphan) para gh-pages
+          git checkout --orphan temp-gh-pages
+          git reset --hard
+          git commit --allow-empty -m "Initializing gh-pages branch"
           git checkout main
-          
-      - name: Run chart-releaser
-        uses: helm/chart-releaser-action@v1.6.0
-        env:
-          CR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          charts_dir: charts
-          config: cr-config.yaml
-          
-      - name: Generate and Push index.yaml
+          git push origin -D gh-pages || true
+          git push origin temp-gh-pages:gh-pages
+          git branch -D temp-gh-pages
+      
+      - name: Upload Packaged Charts
         run: |
-          if [ -d ".cr-release-packages" ]; then
-            mkdir -p .cr-index
-            helm repo index --url https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/ .cr-release-packages --merge .cr-index/index.yaml || true
-            git checkout gh-pages
-            cp .cr-release-packages/index.yaml index.yaml || true
-            git add index.yaml
-            git commit -m "Update index.yaml" || true
-            git push origin gh-pages
-          fi
+          # Clone a branch gh-pages limpa
+          git clone --single-branch --branch gh-pages https://${GITHUB_ACTOR}:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git gh-pages
           
-      - name: Verify gh-pages
+          # Copia os pacotes para a pasta gh-pages
+          cp .cr-release-packages/*.tgz gh-pages/
+          
+          # Gera o index.yaml
+          cd gh-pages
+          helm repo index --url https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/ .
+          
+          # Commit e push
+          git add .
+          git commit -m "Update Helm repository"
+          git push
+          
+      - name: Cleanup
         run: |
-          echo "Verificando se a branch gh-pages foi atualizada corretamente"
-          git fetch origin gh-pages || echo "Branch gh-pages ainda não existe"
+          rm -rf gh-pages
+          rm -rf .cr-release-packages
