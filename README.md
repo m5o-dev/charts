@@ -1,4 +1,4 @@
-# Helm Charts - Página de Repositório
+# Helm Charts - Página de Repositório ;)
 
 Este é o repositório Helm hospedado via GitHub Pages do projeto [m5o-dev/charts](https://github.com/m5o-dev/charts).
 
