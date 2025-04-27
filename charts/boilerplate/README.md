@@ -7,6 +7,7 @@ Este é um chart Helm boilerplate que serve como biblioteca para criar recursos 
 - Criação dinâmica de Deployments com base nas configurações do values.yaml
 - Criação dinâmica de Services com base nas configurações do values.yaml
 - Criação dinâmica de ConfigMaps com base nas configurações do values.yaml
+- Criação dinâmica de PersistentVolumeClaims com base nas configurações do values.yaml
 - Criação dinâmica de IngressRoutes do Traefik com base nas configurações do values.yaml
 - Criação dinâmica de Argo Rollouts com base nas configurações do values.yaml
 - Configuração flexível através de values customizáveis
@@ -23,6 +24,7 @@ boilerplate/
     ├── deployment.yaml   # Template para Deployments
     ├── service.yaml      # Template para Services
     ├── configmap.yaml    # Template para ConfigMaps
+    ├── pvc.yaml          # Template para PersistentVolumeClaims
     ├── ingressroute.yaml # Template para IngressRoutes do Traefik
     └── rollout.yaml      # Template para Argo Rollouts
 ```
@@ -85,111 +87,261 @@ helm install meu-app ./charts/boilerplate -f values-custom.yaml
 
 O arquivo `values.yaml` é estruturado para permitir a definição de múltiplos recursos:
 
+### Namespace (opcional)
+
+```yaml
+# Configuração de namespace (opcional)
+namespace: default
+```
+
 ### Deployments
 
 ```yaml
 deployments:
-  app1:
-    enabled: true         # Habilita a criação do deployment
-    replicas: 1           # Número de réplicas
+  app:
+    enabled: true                    # Habilita a criação do deployment
+    replicas: 2                      # Número de réplicas
     image:
-      repository: nginx   # Repositório da imagem
-      tag: "1.21.0"       # Tag da imagem
-      pullPolicy: IfNotPresent # Política de pull
-    command: []           # Comando para executar no container
-    # - "/bin/sh"
-    # - "-c"
-    args: []              # Argumentos para o comando do container
-    # - "nginx -g 'daemon off;'"
-    # Outras configurações
+      repository: nginx              # Repositório da imagem
+      tag: "1.21.0"                  # Tag da imagem
+      pullPolicy: IfNotPresent       # Política de pull (IfNotPresent, Always, Never)
+    command:                         # Comando a ser executado (opcional)
+      - "/bin/sh"
+      - "-c"
+    args:                            # Argumentos para o comando (opcional)
+      - "nginx -g 'daemon off;'"
+    ports:                           # Portas expostas pelo container
+      - name: http                   # Nome da porta
+        containerPort: 80            # Porta do container
+        protocol: TCP                # Protocolo (TCP ou UDP)
+    env:                             # Variáveis de ambiente
+      - name: NGINX_HOST             # Nome da variável
+        value: example.com           # Valor direto
+      - name: POD_NAME               # Variável com valor do Kubernetes
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.name
+      - name: DB_HOST                # Variável de ConfigMap
+        valueFrom:
+          configMapKeyRef:
+            name: app-config
+            key: db_host
+      - name: DB_PASSWORD            # Variável de Secret
+        valueFrom:
+          secretKeyRef:
+            name: app-secrets
+            key: db_password
+    resources:                       # Recursos de CPU e memória
+      limits:                        # Limites máximos
+        cpu: 500m                    # 500 milicores = 0.5 CPU
+        memory: 512Mi                # 512 Mebibytes
+      requests:                      # Requisições mínimas
+        cpu: 100m                    # 100 milicores = 0.1 CPU
+        memory: 128Mi                # 128 Mebibytes
+    volumeMounts:                    # Montagem de volumes no container
+      - name: config-volume
+        mountPath: /etc/config
+        subPath: myconfig            # Subdiretório dentro do volume (opcional)
+    volumes:                         # Volumes para o pod
+      - name: config-volume
+        configMap:
+          name: app-config
+      - name: data-volume
+        persistentVolumeClaim:
+          claimName: app-data        # Vai ser sufixado com "-pvc"
+      - name: secret-volume
+        secret:
+          secretName: app-secrets
 ```
 
 ### Services
 
 ```yaml
 services:
-  app1:
-    enabled: true         # Habilita a criação do serviço
-    type: ClusterIP       # Tipo do serviço (ClusterIP, NodePort, LoadBalancer)
-    ports:                # Portas do serviço
-      - name: http
-        port: 80
-        targetPort: http
-        protocol: TCP
-    # Seletores de pods
+  app:
+    enabled: true                    # Habilita a criação do serviço
+    type: ClusterIP                  # Tipo do serviço (ClusterIP, NodePort, LoadBalancer)
+    ports:                           # Portas do serviço
+      - name: http                   # Nome da porta
+        port: 80                     # Porta do serviço
+        targetPort: http             # Porta alvo (número ou nome)
+        nodePort: 30080              # Porta do nó (se NodePort, opcional)
+        protocol: TCP                # Protocolo (TCP ou UDP)
+    selector:                        # Seletor personalizado para os pods (opcional)
+      app: app                       # Se não definido, usa app=$name e release=$Release.Name
 ```
 
 ### ConfigMaps
 
 ```yaml
 configMaps:
-  app1-config:
-    enabled: true         # Habilita a criação do configmap
-    data:                 # Dados do configmap
+  app-config:
+    enabled: true                    # Habilita a criação do ConfigMap
+    data:                            # Dados do ConfigMap
       config.yaml: |
-        key1: value1
-        key2: value2
-      settings.json: |
-        {
-          "debug": false,
-          "logLevel": "info"
-        }
+        server:
+          port: 8080
+          host: 0.0.0.0
+      db_host: db.example.com
+      allowed_origins: |
+        https://example.com
+        https://api.example.com
+```
+
+### PersistentVolumeClaims
+
+```yaml
+persistentVolumeClaims:
+  app-data:
+    enabled: true                    # Habilita a criação do PVC
+    name: app                        # Nome da aplicação para labels (opcional)
+    accessModes:                     # Modos de acesso
+      - ReadWriteOnce                # Outras opções: ReadOnlyMany, ReadWriteMany
+    storageClassName: local-path     # Classe de armazenamento
+    storage: 10Gi                    # Tamanho do volume
+    annotations:                     # Anotações (opcional)
+      helm.sh/resource-policy: keep  # Mantém o PVC quando o release é removido
+    selector:                        # Seletor para vincular a PVs específicos (opcional)
+      matchLabels:
+        type: ssd
 ```
 
 ### IngressRoutes (Traefik)
 
 ```yaml
 ingressRoutes:
-  app1:
-    enabled: true                      # Habilita a criação do ingressroute
-    entryPoints:                       # Entry points do Traefik
+  app:
+    enabled: true                    # Habilita a criação do IngressRoute
+    entryPoints:                     # Pontos de entrada do Traefik
       - web
       - websecure
-    routes:                            # Rotas do IngressRoute
-      - match: Host(`app1.example.com`) # Regra de match
-        kind: Rule                     # Tipo de regra
-        priority: 10                   # Prioridade
-        services:                      # Serviços de backend
-          - name: app1                 # Nome do serviço (será prefixado com Release.Name)
-            port: 80                   # Porta do serviço
-        middlewares: []                # Middlewares do Traefik
-    tls:                               # Configuração TLS
-      enabled: false                   # Habilita TLS
-      # certResolver: default          # Cert Resolver do Traefik
-      # domains:                       # Domínios para o certificado
-      #   - main: app1.example.com
-      #     sans:
-      #       - "*.app1.example.com"
+    routes:                          # Rotas
+      - match: Host(`app.example.com`)  # Regra de match
+        kind: Rule                      # Tipo de regra
+        priority: 10                    # Prioridade (opcional)
+        services:                       # Serviços de backend
+          - name: service               # Será prefixado pelo nome do release e sufixado com -service
+            port: 80                    # Porta do serviço
+            weight: 10                  # Peso para balanceamento (opcional)
+            strategy: RoundRobin        # Estratégia de balanceamento (opcional)
+            passHostHeader: true        # Passa o cabeçalho Host (opcional)
+        middlewares:                    # Middlewares do Traefik (opcional)
+          - name: redirect-https        # Será prefixado pelo nome do release
+    tls:                                # Configuração TLS (opcional)
+      enabled: true                     # Habilita TLS
+      certResolver: default             # Cert Resolver do Traefik (opcional)
+      domains:                          # Domínios para o certificado (opcional)
+        - main: example.com
+          sans:
+            - "*.example.com"
+      secretName: tls-cert              # Nome do secret com o certificado (opcional)
 ```
 
-### Rollouts (Argo)
+### Argo Rollouts
 
 ```yaml
 rollouts:
-  app1:
-    enabled: true                     # Habilita a criação do rollout
-    replicas: 1                        # Número de réplicas
+  app:
+    enabled: true                     # Habilita a criação do Rollout
+    replicas: 3                       # Número de réplicas
     image:
-      repository: nginx                # Repositório da imagem
-      tag: "1.21.0"                    # Tag da imagem
-    command: []                        # Comando para executar no container
-    # - "/bin/sh"
-    # - "-c"
-    args: []                           # Argumentos para o comando do container
-    # - "nginx -g 'daemon off;'"
-    strategy:
-      type: canary                     # Tipo de estratégia: canary ou blueGreen
-      canary:                          # Configuração para estratégia canary
-        maxUnavailable: 25%            # Máximo indisponível durante atualização
-        maxSurge: 25%                  # Máximo de surge durante atualização
-        steps:                         # Passos do canary
-          - setWeight: 20              # Define peso de tráfego
-          - pause: {duration: 30s}     # Pausa antes do próximo passo
-          - setWeight: 40              # Aumenta o peso
-      blueGreen:                       # Configuração para estratégia blue-green
-        previewService: preview-service # Serviço para preview
-        activeService: active-service  # Serviço ativo
-        autoPromotionEnabled: false    # Auto-promoção de versão
+      repository: nginx               # Repositório da imagem
+      tag: "1.21.0"                   # Tag da imagem
+      pullPolicy: IfNotPresent        # Política de pull
+    command:                          # Comando a ser executado (opcional)
+      - "/bin/sh"
+      - "-c"
+    args:                             # Argumentos para o comando (opcional)
+      - "nginx -g 'daemon off;'"
+    ports:                            # Portas expostas pelo container
+      - name: http
+        containerPort: 80
+        protocol: TCP
+    env:                              # Variáveis de ambiente (opcional)
+      - name: ENV
+        value: production
+    resources:                        # Recursos de CPU e memória (opcional)
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+      requests:
+        cpu: 500m
+        memory: 512Mi
+    readinessProbe:                   # Verificação de prontidão (opcional)
+      httpGet:
+        path: /ready
+        port: http
+      initialDelaySeconds: 10
+      periodSeconds: 5
+    livenessProbe:                    # Verificação de vitalidade (opcional)
+      httpGet:
+        path: /health
+        port: http
+      initialDelaySeconds: 20
+      periodSeconds: 10
+    volumeMounts:                     # Montagem de volumes (opcional)
+      - name: data
+        mountPath: /data
+    volumes:                          # Volumes para o pod (opcional)
+      - name: data
+        persistentVolumeClaim:
+          claimName: app-data
+    strategy:                         # Estratégia de implantação
+      type: canary                    # canary ou blueGreen
+      # Configuração para estratégia Canary
+      canary:
+        maxSurge: 25%                 # Máximo de pods extras durante atualização
+        maxUnavailable: 0%            # Máximo de pods indisponíveis durante atualização
+        steps:                        # Etapas do Canary
+          - setWeight: 20             # Define peso de tráfego para o canary
+          - pause:                    # Pausa antes da próxima etapa
+              duration: 30s           # Duração da pausa
+          - setWeight: 40
+          - pause:
+              duration: 30s
+          - setWeight: 60
+          - pause:
+              duration: 30s
+          - setWeight: 80
+          - pause:
+              duration: 30s
+      # Configuração para estratégia Blue-Green (usado apenas quando type=blueGreen)
+      blueGreen:
+        # Os nomes dos serviços serão automaticamente prefixados com Release.Name
+        activeService: service        # Serviço ativo será Release.Name-service
+        previewService: preview-service # Serviço de preview será Release.Name-preview-service
+        autoPromotionEnabled: false   # Auto-promoção
+        autoPromotionSeconds: 30      # Tempo para auto-promoção
+        prePromotionAnalysis:         # Análise pré-promoção (opcional)
+          templates:
+            - templateName: success-rate
+          args:
+            - name: service-name
+              value: preview-service
+        postPromotionAnalysis:        # Análise pós-promoção (opcional)
+          templates:
+            - templateName: success-rate
+          args:
+            - name: service-name
+              value: active-service
+        antiAffinity: true            # Anti-afinidade para pods blue/green
+    # Configuração de análise compartilhada entre estratégias
+    analysis:                         # Configuração de análise (opcional)
+      templates:
+        - name: success-rate
+          metricTemplates:
+            - name: success-rate
+              successCondition: result[0] >= 0.95
+              provider:
+                prometheus:
+                  address: http://prometheus.monitoring:9090
+                  query: |
+                    sum(rate(
+                      http_requests_total{status=~"2.*", service="{{args.service-name}}"}[5m]
+                    )) / 
+                    sum(rate(
+                      http_requests_total{service="{{args.service-name}}"}[5m]
+                    ))
 ```
 
 ## Criação de novos charts usando o boilerplate
