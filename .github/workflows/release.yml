@@ -42,6 +42,10 @@ jobs:
               # Extrair a versão do chart
               chart_version=$(grep -m 1 'version:' "$chart/Chart.yaml" | awk '{print $2}')
               
+              # Construir dependências do chart
+              echo "Building dependencies for $chart_name"
+              helm dependency build "$chart"
+              
               # Empacotar o chart
               helm package "$chart" -d .cr-release-packages/
               echo "Packaged $chart_name v$chart_version"

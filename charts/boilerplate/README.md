@@ -54,7 +54,17 @@ helm-boilerplate:
       # Outras configurações...
 ```
 
-3. Adicione templates específicos para recursos não suportados pelo boilerplate.
+3. Construa as dependências do chart antes de instalar ou empacotar:
+
+```bash
+# Constrói as dependências definidas no Chart.yaml
+helm dependency build ./seu-chart
+
+# Ou atualize se as dependências já foram construídas anteriormente
+helm dependency update ./seu-chart
+```
+
+4. Adicione templates específicos para recursos não suportados pelo boilerplate.
 
 Veja o diretório `charts/postgres-example` para um exemplo completo.
 
@@ -82,6 +92,7 @@ helm install meu-app ./charts/boilerplate -f values-custom.yaml
 - Por padrão, **nenhum recurso será criado** ao instalar o chart sem valores personalizados
 - Para criar recursos, você deve explicitamente definir `enabled: true` para cada recurso em seu arquivo de valores
 - Os exemplos no arquivo values.yaml principal estão todos com `enabled: false`
+- Sempre execute `helm dependency build` ou `helm dependency update` antes de empacotar ou instalar charts que têm dependências
 
 ## Configuração
 
@@ -349,6 +360,7 @@ rollouts:
 Para criar um novo chart que utilize o boilerplate:
 
 1. Crie uma nova pasta para seu chart: `mkdir -p charts/meu-servico`
+
 2. Adicione um `Chart.yaml` com a dependência para o boilerplate:
 
 ```yaml
@@ -378,6 +390,12 @@ helm-boilerplate:
       # ... configurações específicas
 ```
 
-4. Adicione templates adicionais específicos em `templates/` conforme necessário.
+4. Construa as dependências antes de instalar ou empacotar o chart:
+
+```bash
+helm dependency build ./charts/meu-servico
+```
+
+5. Adicione templates adicionais específicos em `templates/` conforme necessário.
 
 Veja o exemplo completo em `charts/postgres-example/` para referência. 
