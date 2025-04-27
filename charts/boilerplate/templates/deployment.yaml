@@ -46,6 +46,19 @@ spec:
           protocol: {{ .protocol }}
         {{- end }}
         {{- end }}
+        {{- if $deployment.envFrom }}
+        envFrom:
+        {{- range $deployment.envFrom }}
+        {{- if .secretRef }}
+        - secretRef:
+            name: {{ .secretRef.name }}-secret
+        {{- end }}
+        {{- if .configMapRef }}
+        - configMapRef:
+            name: {{ .configMapRef.name }}
+        {{- end }}
+        {{- end }}
+        {{- end }}
         {{- if $deployment.env }}
         env:
         {{- range $deployment.env }}

@@ -1,76 +1,96 @@
 # Valores para o chart postgres-example
+# Este chart demonstra como usar o boilerplate para configurar
+# uma instância de PostgreSQL com credenciais armazenadas em Secrets
 
 # Passa valores para o subchart boilerplate
 helm-boilerplate:
+  # Secrets para credenciais do PostgreSQL
+  # As credenciais são definidas diretamente com os nomes esperados pelo PostgreSQL
+  # (POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB)
+  secrets:
+    postgres-credentials:
+      enabled: true # Habilita a criação do Secret
+      type: Opaque # Tipo do Secret (Opaque = padrão para dados sensíveis)
+      data:
+        POSTGRES_USER: postgres # Nome do usuário PostgreSQL
+        POSTGRES_PASSWORD: postgres123 # Senha do PostgreSQL (altere para uma senha forte em produção)
+        # POSTGRES_DB: mydb              # Nome do banco de dados (opcional, descomente se necessário)
+
   deployments:
     postgres:
-      enabled: true
-      replicas: 1
+      enabled: true # Habilita a criação do Deployment
+      replicas: 1 # Número de réplicas (manter 1 para PostgreSQL com persistência)
       image:
-        repository: postgres
-        tag: "13.4"
-        pullPolicy: IfNotPresent
+        repository: postgres # Imagem do PostgreSQL
+        tag: "13.4" # Versão do PostgreSQL
+        pullPolicy: IfNotPresent # Política de pull para a imagem
       ports:
-      - name: postgres
-        containerPort: 5432
-        protocol: TCP
-      env:
-      - name: POSTGRES_USER
-        value: postgres
-      - name: POSTGRES_PASSWORD
-        value: postgres
-      - name: POSTGRES_DB
-        value: mydb
+      - name: postgres # Nome da porta
+        containerPort: 5432 # Porta padrão do PostgreSQL
+        protocol: TCP # Protocolo usado
+      # Carrega todas as variáveis definidas no Secret automaticamente
+      # Isso injeta POSTGRES_USER, POSTGRES_PASSWORD e POSTGRES_DB (se definido)
+      # diretamente no container, sem precisar especificar cada uma manualmente
+      envFrom:
+      - secretRef:
+          name: postgres-credentials # Nome do Secret com as credenciais
       resources:
+        # Limites e requisições de recursos para o PostgreSQL
+        # Ajuste conforme sua carga de trabalho
         limits:
-          cpu: 1000m
-          memory: 2Gi
+          cpu: 1000m # 1 CPU (máximo)
+          memory: 2Gi # 2 GB de memória (máximo)
         requests:
-          cpu: 500m
-          memory: 1Gi
+          cpu: 500m # 0.5 CPU (mínimo garantido)
+          memory: 1Gi # 1 GB de memória (mínimo garantido)
       volumeMounts:
-      - name: postgres-data
-        mountPath: /var/lib/postgresql/data
+      - name: postgres-data # Nome do volume
+        mountPath: /var/lib/postgresql/data # Caminho de montagem no container
       volumes:
-      - name: postgres-data
+      - name: postgres-data # Nome do volume (deve corresponder ao volumeMount)
         persistentVolumeClaim:
-          claimName: postgres-data
+          claimName: postgres-data # Nome do PVC (suffixo -pvc será adicionado automaticamente)
 
   services:
     postgres:
-      enabled: true
-      type: ClusterIP
+      enabled: true # Habilita a criação do Service
+      type: ClusterIP # Tipo do serviço (ClusterIP para acesso interno ao cluster)
       ports:
-      - name: postgres
-        port: 5432
-        targetPort: postgres
-        protocol: TCP
+      - name: postgres # Nome da porta
+        port: 5432 # Porta do serviço
+        targetPort: postgres # Porta alvo no container
+        protocol: TCP # Protocolo usado
       selector:
-        app: postgres
+        app: postgres # Seletor para os pods do PostgreSQL
 
   # ConfigMaps para o PostgreSQL
+  # Contém configurações personalizadas para o PostgreSQL
   configMaps:
     postgres-config:
-      enabled: true
+      enabled: true # Habilita a criação do ConfigMap
       data:
+        # Configurações de performance para o PostgreSQL
+        # Ajuste estes valores de acordo com os recursos disponíveis
         postgresql.conf: |
-          max_connections = 100
-          shared_buffers = 256MB
-          effective_cache_size = 768MB
-          work_mem = 2MB
-          maintenance_work_mem = 64MB
-          min_wal_size = 80MB
-          max_wal_size = 1GB
-          checkpoint_completion_target = 0.7
-          wal_buffers = 8MB
-          default_statistics_target = 100
+          max_connections = 100          # Número máximo de conexões
+          shared_buffers = 256MB         # Memória compartilhada para cache
+          effective_cache_size = 768MB   # Cache efetivo estimado
+          work_mem = 2MB                 # Memória para operações de ordenação
+          maintenance_work_mem = 64MB    # Memória para manutenção
+          min_wal_size = 80MB            # Tamanho mínimo dos logs de transação
+          max_wal_size = 1GB             # Tamanho máximo dos logs de transação
+          checkpoint_completion_target = 0.7 # Meta para completar checkpoints
+          wal_buffers = 8MB              # Buffers para logs de transação
+          default_statistics_target = 100 # Detalhamento das estatísticas
 
-  # PVC para dados do PostgreSQL (criado pelo boilerplate)
+  # PVC para dados do PostgreSQL
+  # Define o armazenamento persistente para os dados do banco
   persistentVolumeClaims:
     postgres-data:
-      enabled: true
+      enabled: true # Habilita a criação do PVC
       accessModes:
-      - ReadWriteOnce
-      storage: 10Gi
+      - ReadWriteOnce # Modo de acesso (RWO = acesso por um único nó)
+      storage: 5Gi # Tamanho do volume (10GB)
+      storageClassName: longhorn # Classe de armazenamento (longhorn)
       annotations:
-        helm.sh/resource-policy: keep
+        helm.sh/resource-policy: keep # Mantém o PVC mesmo ao desinstalar o release

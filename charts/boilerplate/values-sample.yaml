@@ -43,6 +43,12 @@ deployments:
         secretKeyRef:
           name: app-secrets
           key: db_password
+    # Referência a todas as variáveis de um Secret ou ConfigMap
+    envFrom:
+    - secretRef:
+        name: app-secrets # Nome do Secret
+    - configMapRef:
+        name: app-config # Nome do ConfigMap
     resources:
       # Recursos de CPU e memória
       limits:
