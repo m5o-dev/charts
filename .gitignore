@@ -21,3 +21,6 @@ temp/
 *.tmp
 *.bak
 *.swp 
+
+# GitHub Pages
+.nojekyll
