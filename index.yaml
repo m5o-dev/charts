@@ -1,11 +1,29 @@
 apiVersion: v1
 entries:
+  chartmuseum:
+  - apiVersion: v2
+    appVersion: 0.16.0
+    created: "2025-04-28T16:15:22.339224708Z"
+    dependencies:
+    - name: chartmuseum
+      repository: https://chartmuseum.github.io/charts
+      version: 3.10.1
+    - name: helm-boilerplate
+      repository: file://../boilerplate
+      version: 0.0.2
+    description: ChartMuseum Helm Repository Server
+    digest: e3fef201a8c227370619589a3d0723bd489f0e7b4b9fcb1f889f7acd0917308a
+    name: chartmuseum
+    type: application
+    urls:
+    - https://m5o-dev.github.io/charts/charts/chartmuseum/chartmuseum-0.1.0.tgz
+    version: 0.1.0
   helm-boilerplate:
   - apiVersion: v2
     appVersion: 0.0.1
-    created: "2025-04-28T13:28:31.918923518Z"
+    created: "2025-04-28T16:15:22.339893699Z"
     description: A flexible Helm chart boilerplate for creating any Kubernetes resources
-    digest: fb44478e76b8965659bc65cb70d14f7e27f3af4a8d43d0cea719e6013a5d8659
+    digest: f8dd21a4e363752c73c818587037bcbb7089fdb8ef1d4369a9a58c7eff1dce32
     name: helm-boilerplate
     type: application
     urls:
@@ -13,7 +31,7 @@ entries:
     version: 0.0.2
   - apiVersion: v2
     appVersion: 0.0.1
-    created: "2025-04-28T13:28:31.918592731Z"
+    created: "2025-04-28T16:15:22.339559073Z"
     description: A flexible Helm chart boilerplate for creating any Kubernetes resources
     digest: 2f00617a1a4030be50355f6ba9fdff4c0e605ddc2ad33c5a910ebc6fae42a611
     name: helm-boilerplate
@@ -24,13 +42,13 @@ entries:
   postgresql:
   - apiVersion: v2
     appVersion: 0.0.1
-    created: "2025-04-28T13:28:31.920336664Z"
+    created: "2025-04-28T16:15:22.341247771Z"
     dependencies:
     - name: helm-boilerplate
       repository: file://../boilerplate
       version: '>=0.0.1'
     description: PostgreSQL chart using the boilerplate
-    digest: 7df802aaf8486e628bb77062115b092995dce4a633802e86f643f517516ad6b5
+    digest: 75ebc5bd6fd3e07d59256ba2b4b036d5f1a393e8888a6880a8d1aabe98f9a991
     name: postgresql
     type: application
     urls:
@@ -38,7 +56,7 @@ entries:
     version: 0.0.2
   - apiVersion: v2
     appVersion: 0.0.1
-    created: "2025-04-28T13:28:31.919681352Z"
+    created: "2025-04-28T16:15:22.34055691Z"
     dependencies:
     - name: helm-boilerplate
       repository: file://../boilerplate
@@ -50,4 +68,4 @@ entries:
     urls:
     - https://m5o-dev.github.io/charts/charts/postgresql/postgresql-0.0.1.tgz
     version: 0.0.1
-generated: "2025-04-28T13:28:31.918103658Z"
+generated: "2025-04-28T16:15:22.337308595Z"
