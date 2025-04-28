@@ -95,6 +95,7 @@ helm install meu-app ./charts/boilerplate -f values-custom.yaml
 - Para criar recursos, você deve explicitamente definir `enabled: true` para cada recurso em seu arquivo de valores
 - Os exemplos no arquivo values.yaml principal estão todos com `enabled: false`
 - Sempre execute `helm dependency build` ou `helm dependency update` antes de empacotar ou instalar charts que têm dependências
+- Os nomes dos recursos são usados exatamente como definidos no values.yaml, sem sufixos adicionais
 
 ## Configuração
 
@@ -161,7 +162,7 @@ deployments:
           name: app-config
       - name: data-volume
         persistentVolumeClaim:
-          claimName: app-data        # Vai ser sufixado com "-pvc"
+          claimName: app-data
       - name: secret-volume
         secret:
           secretName: app-secrets
@@ -250,178 +251,41 @@ ingressRoutes:
   app:
     enabled: true                    # Habilita a criação do IngressRoute
     entryPoints:                     # Pontos de entrada do Traefik
-      - web
-      - websecure
-    routes:                          # Rotas
-      - match: Host(`app.example.com`)  # Regra de match
-        kind: Rule                      # Tipo de regra
-        priority: 10                    # Prioridade (opcional)
-        services:                       # Serviços de backend
-          - name: service               # Será prefixado pelo nome do release e sufixado com -service
-            port: 80                    # Porta do serviço
-            weight: 10                  # Peso para balanceamento (opcional)
-            strategy: RoundRobin        # Estratégia de balanceamento (opcional)
-            passHostHeader: true        # Passa o cabeçalho Host (opcional)
-        middlewares:                    # Middlewares do Traefik (opcional)
-          - name: redirect-https        # Será prefixado pelo nome do release
-    tls:                                # Configuração TLS (opcional)
-      enabled: true                     # Habilita TLS
-      certResolver: default             # Cert Resolver do Traefik (opcional)
-      domains:                          # Domínios para o certificado (opcional)
-        - main: example.com
-          sans:
-            - "*.example.com"
-      secretName: tls-cert              # Nome do secret com o certificado (opcional)
+      - web                          # Nome do ponto de entrada
+    routes:                          # Rotas do IngressRoute
+      - match: Host(`example.com`)   # Regra de match para a rota
+        kind: Rule                   # Tipo da regra
+        services:                    # Serviços para a rota
+          - name: app                # Nome do serviço
+            port: 80                 # Porta do serviço
 ```
 
-### Argo Rollouts
+### Rollouts (Argo)
 
 ```yaml
 rollouts:
   app:
-    enabled: true                     # Habilita a criação do Rollout
-    replicas: 3                       # Número de réplicas
+    enabled: true                    # Habilita a criação do Rollout
+    replicas: 2                      # Número de réplicas
     image:
-      repository: nginx               # Repositório da imagem
-      tag: "1.21.0"                   # Tag da imagem
-      pullPolicy: IfNotPresent        # Política de pull
-    command:                          # Comando a ser executado (opcional)
-      - "/bin/sh"
-      - "-c"
-    args:                             # Argumentos para o comando (opcional)
-      - "nginx -g 'daemon off;'"
-    ports:                            # Portas expostas pelo container
-      - name: http
-        containerPort: 80
-        protocol: TCP
-    env:                              # Variáveis de ambiente (opcional)
-      - name: ENV
-        value: production
-    resources:                        # Recursos de CPU e memória (opcional)
-      limits:
-        cpu: 1000m
-        memory: 1Gi
-      requests:
-        cpu: 500m
-        memory: 512Mi
-    readinessProbe:                   # Verificação de prontidão (opcional)
-      httpGet:
-        path: /ready
-        port: http
-      initialDelaySeconds: 10
-      periodSeconds: 5
-    livenessProbe:                    # Verificação de vitalidade (opcional)
-      httpGet:
-        path: /health
-        port: http
-      initialDelaySeconds: 20
-      periodSeconds: 10
-    volumeMounts:                     # Montagem de volumes (opcional)
-      - name: data
-        mountPath: /data
-    volumes:                          # Volumes para o pod (opcional)
-      - name: data
-        persistentVolumeClaim:
-          claimName: app-data
-    strategy:                         # Estratégia de implantação
-      type: canary                    # canary ou blueGreen
-      # Configuração para estratégia Canary
-      canary:
-        maxSurge: 25%                 # Máximo de pods extras durante atualização
-        maxUnavailable: 0%            # Máximo de pods indisponíveis durante atualização
-        steps:                        # Etapas do Canary
-          - setWeight: 20             # Define peso de tráfego para o canary
-          - pause:                    # Pausa antes da próxima etapa
-              duration: 30s           # Duração da pausa
-          - setWeight: 40
-          - pause:
-              duration: 30s
-          - setWeight: 60
-          - pause:
-              duration: 30s
-          - setWeight: 80
-          - pause:
-              duration: 30s
-      # Configuração para estratégia Blue-Green (usado apenas quando type=blueGreen)
-      blueGreen:
-        # Os nomes dos serviços serão automaticamente prefixados com Release.Name
-        activeService: service        # Serviço ativo será Release.Name-service
-        previewService: preview-service # Serviço de preview será Release.Name-preview-service
-        autoPromotionEnabled: false   # Auto-promoção
-        autoPromotionSeconds: 30      # Tempo para auto-promoção
-        prePromotionAnalysis:         # Análise pré-promoção (opcional)
-          templates:
-            - templateName: success-rate
-          args:
-            - name: service-name
-              value: preview-service
-        postPromotionAnalysis:        # Análise pós-promoção (opcional)
-          templates:
-            - templateName: success-rate
-          args:
-            - name: service-name
-              value: active-service
-        antiAffinity: true            # Anti-afinidade para pods blue/green
-    # Configuração de análise compartilhada entre estratégias
-    analysis:                         # Configuração de análise (opcional)
-      templates:
-        - name: success-rate
-          metricTemplates:
-            - name: success-rate
-              successCondition: result[0] >= 0.95
-              provider:
-                prometheus:
-                  address: http://prometheus.monitoring:9090
-                  query: |
-                    sum(rate(
-                      http_requests_total{status=~"2.*", service="{{args.service-name}}"}[5m]
-                    )) / 
-                    sum(rate(
-                      http_requests_total{service="{{args.service-name}}"}[5m]
-                    ))
+      repository: nginx              # Repositório da imagem
+      tag: "1.21.0"                  # Tag da imagem
+      pullPolicy: IfNotPresent       # Política de pull
+    strategy:
+      type: RollingUpdate            # Tipo de estratégia
+      rollingUpdate:
+        maxSurge: 1                  # Número máximo de pods acima do desired
+        maxUnavailable: 0            # Número máximo de pods indisponíveis
+    template:
+      containers:
+        - name: app                  # Nome do container
+          image: nginx:1.21.0        # Imagem do container
+          ports:
+            - name: http             # Nome da porta
+              containerPort: 80      # Porta do container
+              protocol: TCP          # Protocolo
 ```
 
-## Criação de novos charts usando o boilerplate
+## Exemplos
 
-Para criar um novo chart que utilize o boilerplate:
-
-1. Crie uma nova pasta para seu chart: `mkdir -p charts/meu-servico`
-
-2. Adicione um `Chart.yaml` com a dependência para o boilerplate:
-
-```yaml
-apiVersion: v2
-name: meu-servico
-description: Meu serviço usando boilerplate
-type: application
-version: 0.1.0
-appVersion: "1.0.0"
-
-dependencies:
-  - name: helm-boilerplate
-    version: ">=0.1.0"
-    repository: "file://../boilerplate" # Ou seu repositório Helm
-```
-
-3. Crie um arquivo `values.yaml` com suas configurações específicas:
-
-```yaml
-# Valores para o meu-servico
-
-# Configurações do boilerplate
-helm-boilerplate:
-  deployments:
-    meu-app:
-      enabled: true
-      # ... configurações específicas
-```
-
-4. Construa as dependências antes de instalar ou empacotar o chart:
-
-```bash
-helm dependency build ./charts/meu-servico
-```
-
-5. Adicione templates adicionais específicos em `templates/` conforme necessário.
-
-Veja o exemplo completo em `charts/postgres-example/` para referência. 
+Veja o diretório `charts/postgres-example` para um exemplo completo de uso do boilerplate. 

@@ -8,5 +8,5 @@ appVersion: "0.0.1"
 # Dependência do chart boilerplate
 dependencies:
 - name: helm-boilerplate
-  version: ">=0.0.1"
+  version: ">=0.0.3"
   repository: "file://../boilerplate"

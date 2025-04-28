@@ -71,7 +71,7 @@ deployments:
         name: app-config
     - name: data-volume
       persistentVolumeClaim:
-        claimName: app-data # Vai ser sufixado com "-pvc"
+        claimName: app-data
     - name: secret-volume
       secret:
         secretName: app-secrets
@@ -163,14 +163,14 @@ ingressRoutes:
       priority: 10 # Prioridade (opcional)
       services:
       # Serviços de backend
-      - name: service # Será prefixado pelo nome do release e sufixado com -service
+      - name: service
         port: 80 # Porta do serviço
         weight: 10 # Peso para balanceamento (opcional)
         strategy: RoundRobin # Estratégia de balanceamento (opcional)
         passHostHeader: true # Passa o cabeçalho Host (opcional)
       middlewares:
       # Middlewares do Traefik (opcional)
-      - name: redirect-https # Será prefixado pelo nome do release
+      - name: redirect-https
     tls:
       # Configuração TLS (opcional)
       enabled: true # Habilita TLS
@@ -262,9 +262,8 @@ rollouts:
             duration: 30s
       # Configuração para estratégia Blue-Green (usado apenas quando type=blueGreen)
       blueGreen:
-        # Os nomes dos serviços serão automaticamente prefixados com Release.Name
-        activeService: service # Serviço ativo será Release.Name-service
-        previewService: preview-service # Serviço de preview será Release.Name-preview-service
+        activeService: service
+        previewService: preview-service
         autoPromotionEnabled: false # Auto-promoção
         autoPromotionSeconds: 30 # Tempo para auto-promoção
         prePromotionAnalysis:

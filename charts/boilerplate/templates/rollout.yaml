@@ -4,7 +4,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
-  name: {{ $name }}-rollout
+  name: {{ $name }}
   namespace: {{ $.Values.namespace | default $.Release.Namespace }}
   labels:
     app: {{ $name }}
@@ -52,7 +52,7 @@ spec:
         {{- range $rollout.envFrom }}
         {{- if .secretRef }}
         - secretRef:
-            name: {{ .secretRef.name }}-secret
+            name: {{ .secretRef.name }}
         {{- end }}
         {{- if .configMapRef }}
         - configMapRef:

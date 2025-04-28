@@ -4,7 +4,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ $name }}-deployment
+  name: {{ $name }}
   namespace: {{ $.Values.namespace | default $.Release.Namespace }}
   labels:
     app: {{ $name }}
@@ -51,7 +51,7 @@ spec:
         {{- range $deployment.envFrom }}
         {{- if .secretRef }}
         - secretRef:
-            name: {{ .secretRef.name }}-secret
+            name: {{ .secretRef.name }}
         {{- end }}
         {{- if .configMapRef }}
         - configMapRef:
@@ -129,7 +129,7 @@ spec:
         {{- end }}
         {{- if .persistentVolumeClaim }}
         persistentVolumeClaim:
-          claimName: {{ .persistentVolumeClaim.claimName }}-pvc
+          claimName: {{ .persistentVolumeClaim.claimName }}
         {{- end }}
       {{- end }}
       {{- end }}

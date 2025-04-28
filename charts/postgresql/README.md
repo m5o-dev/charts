@@ -4,11 +4,11 @@ Este é um exemplo de como usar o chart boilerplate como dependência para criar
 
 ## Características
 
-- Deployment do PostgreSQL 13.4 (nomeado como `release-name-deployment`)
-- Serviço para acessar o PostgreSQL (nomeado como `release-name-service`)
-- ConfigMap com configurações personalizadas (nomeado como `release-name`)
+- Deployment do PostgreSQL 13.4
+- Serviço para acessar o PostgreSQL
+- ConfigMap com configurações personalizadas
 - Secret para armazenar credenciais de forma segura (nomeado como `postgres-credentials`)
-- PersistentVolumeClaim para armazenamento dos dados (nomeado como `release-name-pvc`)
+- PersistentVolumeClaim para armazenamento dos dados
 
 ## Instalação
 

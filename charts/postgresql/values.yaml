@@ -50,7 +50,7 @@ helm-boilerplate:
       volumes:
       - name: postgres-data # Nome do volume (deve corresponder ao volumeMount)
         persistentVolumeClaim:
-          claimName: postgres-data # Nome do PVC (suffixo -pvc será adicionado automaticamente)
+          claimName: postgres-data # Nome do PVC
 
   services:
     postgres:

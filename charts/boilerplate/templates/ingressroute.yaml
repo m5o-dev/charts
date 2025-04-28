@@ -4,7 +4,7 @@
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
-  name: {{ $name }}-ingressroute
+  name: {{ $name }}
   namespace: {{ $.Values.namespace | default $.Release.Namespace }}
   labels:
     app: {{ $name }}
