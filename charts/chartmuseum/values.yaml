@@ -8,6 +8,7 @@ chartmuseum:
       CHART_URL: http://museum.v3m.ai
       ALLOW_OVERWRITE: true
       AUTH_ANONYMOUS_GET: true
+      DISABLE_API: false
       BASIC_AUTH_USER: "admin"
       BASIC_AUTH_PASS: "admin"
 
@@ -37,7 +38,17 @@ helm-boilerplate:
       entryPoints:
       - web
       routes:
-      - match: Host(`museum.v3m.ai`)
+      - match: Host(`museum.v3m.ai`) && PathPrefix(`/index.yaml`)
+        kind: Rule
+        services:
+        - name: chartmuseum
+          port: 8080
+      - match: Host(`museum.v3m.ai`) && PathPrefix(`/api/`)
+        kind: Rule
+        services:
+        - name: chartmuseum
+          port: 8080
+      - match: Host(`museum.v3m.ai`) && PathPrefix(`/charts/`)
         kind: Rule
         services:
         - name: chartmuseum

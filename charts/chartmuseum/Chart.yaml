@@ -3,7 +3,7 @@ name: chartmuseum
 description: ChartMuseum Helm Repository Server
 type: application
 version: 0.1.0
-appVersion: "0.16.0"
+appVersion: "0.16.2"
 
 dependencies:
 - name: chartmuseum
