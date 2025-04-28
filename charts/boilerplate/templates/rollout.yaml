@@ -147,10 +147,10 @@ spec:
     {{- if eq $rollout.strategy.type "blueGreen" }}
     blueGreen:
       {{- if $rollout.strategy.blueGreen.activeService }}
-      activeService: {{ $.Release.Name }}-service
+      activeService: {{ $.Release.Name }}
       {{- end }}
       {{- if $rollout.strategy.blueGreen.previewService }}
-      previewService: {{ $.Release.Name }}-preview-service
+      previewService: {{ $.Release.Name }}-preview
       {{- end }}
       {{- if $rollout.strategy.blueGreen.autoPromotionEnabled }}
       autoPromotionEnabled: {{ $rollout.strategy.blueGreen.autoPromotionEnabled }}

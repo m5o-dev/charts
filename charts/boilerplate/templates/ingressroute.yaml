@@ -24,7 +24,7 @@ spec:
     {{- end }}
     services:
     {{- range .services }}
-    - name: {{ $.Release.Name }}-service
+    - name: {{ $.Release.Name }}
       port: {{ .port }}
       {{- if .weight }}
       weight: {{ .weight }}

@@ -263,7 +263,7 @@ rollouts:
       # Configuração para estratégia Blue-Green (usado apenas quando type=blueGreen)
       blueGreen:
         activeService: service
-        previewService: preview-service
+        previewService: preview
         autoPromotionEnabled: false # Auto-promoção
         autoPromotionSeconds: 30 # Tempo para auto-promoção
         prePromotionAnalysis:
@@ -272,14 +272,14 @@ rollouts:
           - templateName: success-rate
           args:
           - name: service-name
-            value: preview-service
+            value: preview
         postPromotionAnalysis:
           # Análise pós-promoção (opcional)
           templates:
           - templateName: success-rate
           args:
           - name: service-name
-            value: active-service
+            value: active
         antiAffinity: true # Anti-afinidade para pods blue/green
     # Configuração de análise compartilhada entre estratégias
     analysis:
