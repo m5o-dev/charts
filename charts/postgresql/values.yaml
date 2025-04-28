@@ -15,6 +15,7 @@ helm-boilerplate:
         POSTGRES_USER: postgres # Nome do usuário PostgreSQL
         POSTGRES_PASSWORD: postgres123 # Senha do PostgreSQL (altere para uma senha forte em produção)
         # POSTGRES_DB: mydb              # Nome do banco de dados (opcional, descomente se necessário)
+        PGDATA: /var/lib/postgresql/data/pgdata # Diretório dos dados dentro do volume montado
 
   deployments:
     postgres:
@@ -90,7 +91,7 @@ helm-boilerplate:
       enabled: true # Habilita a criação do PVC
       accessModes:
       - ReadWriteOnce # Modo de acesso (RWO = acesso por um único nó)
-      storage: 5Gi # Tamanho do volume (10GB)
+      storage: 5Gi # Tamanho do volume (5GB)
       storageClassName: longhorn # Classe de armazenamento (longhorn)
       annotations:
         helm.sh/resource-policy: keep # Mantém o PVC mesmo ao desinstalar o release
