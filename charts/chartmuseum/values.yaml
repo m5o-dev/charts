@@ -6,12 +6,10 @@ chartmuseum:
       STORAGE: local
       STORAGE_LOCAL_ROOTDIR: /storage
       CHART_URL: http://museum.v3m.ai
-      DEBUG: false
-      DISABLE_API: false
-      DISABLE_STATEFILES: false
       ALLOW_OVERWRITE: true
       AUTH_ANONYMOUS_GET: true
-      DEPTH: 0
+      BASIC_AUTH_USER: "admin"
+      BASIC_AUTH_PASS: "admin"
 
   persistence:
     enabled: true
