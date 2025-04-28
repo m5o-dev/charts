@@ -1,0 +1,46 @@
+# Configurações para o ChartMuseum
+chartmuseum:
+  env:
+    open:
+      # Configurações gerais
+      STORAGE: local
+      STORAGE_LOCAL_ROOTDIR: /storage
+      CHART_URL: http://museum.v3m.ai
+      DEBUG: false
+      DISABLE_API: false
+      DISABLE_STATEFILES: false
+      ALLOW_OVERWRITE: true
+      AUTH_ANONYMOUS_GET: true
+      DEPTH: 0
+
+  persistence:
+    enabled: true
+    accessMode: ReadWriteOnce
+    size: 10Gi
+    storageClass: "longhorn"
+
+  service:
+    type: ClusterIP
+    port: 8080
+
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 200m
+      memory: 256Mi
+
+# Configurações para o IngressRoute usando o boilerplate
+helm-boilerplate:
+  ingressRoutes:
+    chartmuseum:
+      enabled: true
+      entryPoints:
+      - web
+      routes:
+      - match: Host(`museum.v3m.ai`)
+        kind: Rule
+        services:
+        - name: chartmuseum
+          port: 8080

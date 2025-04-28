@@ -6,6 +6,7 @@ Este repositório contém um conjunto de charts Helm para implantação no Kuber
 
 - **boilerplate/**: Chart base que funciona como biblioteca para os outros charts
 - **postgresql/**: Chart para PostgreSQL usando o boilerplate
+- **chartmuseum/**: Chart para ChartMuseum (servidor de repositório de charts Helm) usando o boilerplate
 
 ## Conceito
 
@@ -148,4 +149,51 @@ E aplique-o na instalação:
 
 ```bash
 helm install postgres-db ./charts/postgresql -n postgresql -f valores-customizados.yaml
+```
+
+### Chart ChartMuseum
+
+O chart `chartmuseum/` demonstra como utilizar o boilerplate para criar uma instância do ChartMuseum, um servidor de repositório de charts Helm.
+
+#### Características
+
+- Deployment do ChartMuseum 0.14.0
+- Serviço para acessar o ChartMuseum
+- ConfigMap com configurações personalizadas
+- Secret para armazenar credenciais de forma segura (opcional)
+- PersistentVolumeClaim para armazenamento dos charts
+- IngressRoute para expor o serviço em museum.v3m.ai
+
+#### Configuração
+
+O ChartMuseum oferece várias opções de configuração:
+
+- **Armazenamento**: Local, Amazon S3, Google Cloud Storage, Azure Blob, etc.
+- **Cache**: Memory ou Redis
+- **Autenticação**: Básica (opcional)
+- **Multitenancy**: Suporte para múltiplos repositórios
+
+#### Instalação
+
+```bash
+# Primeiro, atualize as dependências
+helm dependency update ./charts/chartmuseum
+
+# Depois instale o chart
+helm install chartmuseum ./charts/chartmuseum -n chartmuseum
+```
+
+#### Uso
+
+Após a instalação, o ChartMuseum estará disponível em `https://museum.v3m.ai`.
+
+```bash
+# Adicionar o repositório ao Helm
+helm repo add museum https://museum.v3m.ai
+
+# Fazer upload de um chart
+helm cm-push meu-chart/ museum
+
+# Instalar um chart do repositório
+helm install museum/meu-chart --generate-name
 ``` 
