@@ -6,10 +6,59 @@ jobs:
   test:
     runs-on: [self-hosted, linux, x64]
     steps:
-      - name: Check runner
+      - name: Check runner info
         run: |
           echo "Hello from self-hosted runner!"
           echo "Hostname: $(hostname)"
           echo "OS: $(uname -a)"
+          echo "Working directory: $(pwd)"
+          echo "Directory contents:"
           ls -la
-          pwd 
+      
+      - name: List all environment variables
+        run: |
+          echo "============== ENVIRONMENT VARIABLES =============="
+          # Lista todas as variáveis de ambiente, mas filtra informações sensíveis
+          env | grep -v -E "TOKEN|PASSWORD|SECRET|KEY|AUTH" | sort
+          
+      - name: Show GitHub context variables
+        run: |
+          echo "============== GITHUB CONTEXT VARIABLES =============="
+          echo "GITHUB_REPOSITORY: $GITHUB_REPOSITORY"
+          echo "GITHUB_REF: $GITHUB_REF"
+          echo "GITHUB_SHA: $GITHUB_SHA"
+          echo "GITHUB_WORKFLOW: $GITHUB_WORKFLOW"
+          echo "GITHUB_RUN_ID: $GITHUB_RUN_ID"
+          echo "GITHUB_ACTOR: $GITHUB_ACTOR"
+          echo "GITHUB_EVENT_NAME: $GITHUB_EVENT_NAME"
+          echo "GITHUB_SERVER_URL: $GITHUB_SERVER_URL"
+          echo "GITHUB_API_URL: $GITHUB_API_URL"
+          echo "RUNNER_NAME: $RUNNER_NAME"
+          echo "RUNNER_OS: $RUNNER_OS"
+          echo "RUNNER_TEMP: $RUNNER_TEMP"
+          echo "RUNNER_TOOL_CACHE: $RUNNER_TOOL_CACHE"
+          
+      - name: Check system resources
+        run: |
+          echo "============== SYSTEM RESOURCES =============="
+          echo "CPU Info:"
+          cat /proc/cpuinfo | grep "model name" | head -1
+          echo "Total Cores: $(nproc)"
+          
+          echo "Memory Info:"
+          free -h
+          
+          echo "Disk Space:"
+          df -h
+      
+      - name: Check network connectivity
+        run: |
+          echo "============== NETWORK INFO =============="
+          echo "Hostname resolution:"
+          hostname -f || echo "Unable to get FQDN"
+          
+          echo "IP Addresses:"
+          ip addr | grep inet | grep -v "127.0.0.1" | grep -v "::1" | awk '{print $2}'
+          
+          echo "Default route:"
+          ip route | grep default 
