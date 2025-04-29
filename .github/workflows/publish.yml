@@ -1,0 +1,107 @@
+name: Package and Publish Charts
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'charts/**'
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: [self-hosted, linux, x64]
+    env:
+      CHARTMUSEUM_URL: "https://museum.v3m.ai"
+      CHARTMUSEUM_USER: ${{ secrets.CHARTMUSEUM_USER }}
+      CHARTMUSEUM_PASSWORD: ${{ secrets.CHARTMUSEUM_PASSWORD }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Helm
+        run: |
+          # Verificar se o Helm já está instalado
+          if ! command -v helm &> /dev/null; then
+            echo "Instalando Helm..."
+            curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+          else
+            echo "Helm já está instalado: $(helm version --short)"
+          fi
+          
+          # Instalar plugin helm-cm-push se não estiver instalado
+          if ! helm plugin list | grep -q "cm-push"; then
+            echo "Instalando plugin helm-cm-push..."
+            helm plugin install https://github.com/chartmuseum/helm-push
+          else
+            echo "Plugin helm-cm-push já está instalado"
+          fi
+      
+      - name: Configure Helm repositories
+        run: |
+          # Adicionar repositório ChartMuseum
+          helm repo add chartmuseum $CHARTMUSEUM_URL --username $CHARTMUSEUM_USER --password $CHARTMUSEUM_PASSWORD
+          
+          # Atualizar repositórios
+          helm repo update
+      
+      - name: Build dependencies
+        run: |
+          # Construir dependências para cada chart
+          for chart in charts/*/; do
+            if [ -f "$chart/Chart.yaml" ]; then
+              echo "Construindo dependências para $(basename $chart)..."
+              helm dependency update "$chart"
+            fi
+          done
+      
+      - name: Package Charts
+        run: |
+          # Criar diretório para armazenar pacotes
+          mkdir -p .packages
+          
+          # Empacotar cada chart
+          for chart in charts/*/; do
+            if [ -f "$chart/Chart.yaml" ]; then
+              chart_name=$(basename $chart)
+              echo "Empacotando $chart_name..."
+              helm package "$chart" -d .packages
+            fi
+          done
+          
+          # Listar pacotes gerados
+          echo "Pacotes gerados:"
+          ls -la .packages/
+      
+      - name: Push Charts to ChartMuseum
+        run: |
+          # Enviar cada pacote para o ChartMuseum
+          for package in .packages/*.tgz; do
+            if [ -f "$package" ]; then
+              package_name=$(basename $package)
+              echo "Enviando $package_name para o ChartMuseum..."
+              curl -u "$CHARTMUSEUM_USER:$CHARTMUSEUM_PASSWORD" \
+                --data-binary "@$package" \
+                "$CHARTMUSEUM_URL/api/charts" || {
+                echo "Falha ao enviar $package_name. Tentando método alternativo..."
+                helm cm-push "$package" chartmuseum
+              }
+            fi
+          done
+      
+      - name: Verify published charts
+        run: |
+          echo "Verificando charts publicados..."
+          curl -s -u "$CHARTMUSEUM_USER:$CHARTMUSEUM_PASSWORD" "$CHARTMUSEUM_URL/api/charts" | jq .
+          
+          # Atualizar repositório para verificar se os charts estão disponíveis
+          helm repo update
+          helm search repo chartmuseum/ -l
+      
+      - name: Cleanup
+        run: |
+          echo "Limpando arquivos temporários..."
+          rm -rf .packages 
