@@ -5,6 +5,7 @@ on:
 jobs:
   test:
     runs-on: [self-hosted, linux, x64]
+    environment: ci/cd
     steps:
       - name: Check runner info
         run: |
