@@ -1,0 +1,24 @@
+# Configurações para o Actions Runner Controller
+actions-runner-controller:
+  # Método de autenticação com o GitHub
+  # Opções são: 'github-app' ou 'personal-access-token'
+  authSecret:
+    create: true
+    name: "controller-auth"
+    # Alternativa usando Personal Access Token (PAT)
+    github_token: ""
+  certManagerEnabled: false
+  # Configuração do controller
+  controller:
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 200m
+        memory: 256Mi
+
+  # CRD (Custom Resource Definitions)
+  # Deve ser true para instalação inicial e pode ser false para atualizações
+  crds:
+    install: true

@@ -5,7 +5,7 @@ apiVersion: actions.summerwind.dev/v1alpha1
 kind: RunnerDeployment
 metadata:
   name: {{ $name }}
-  namespace: {{ $.Values.controllerNamespace | default "actions-runner-system" }}
+  namespace: {{ $.Values.controllerNamespace | default "github-actions" }}
 spec:
   replicas: {{ $runner.replicas | default 1 }}
   template:
@@ -15,6 +15,9 @@ spec:
       {{- end }}
       {{- if $runner.organization }}
       organization: {{ $runner.organization }}
+      {{- end }}
+      {{- if $runner.group }}
+      group: {{ $runner.group }}
       {{- end }}
       {{- if $runner.labels }}
       labels:

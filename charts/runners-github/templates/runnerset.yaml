@@ -1,0 +1,101 @@
+{{- range $name, $runner := .Values.runners }}
+{{- if and $runner.enabled (eq $runner.type "RunnerSet") }}
+---
+apiVersion: actions.summerwind.dev/v1alpha1
+kind: RunnerSet
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Values.controllerNamespace | default "github-actions" }}
+spec:
+  {{- with $runner.autoscaling }}
+  {{- if .minReplicas }}
+  replicas: {{ .minReplicas }}
+  {{- else }}
+  replicas: 1
+  {{- end }}
+  {{- end }}
+  
+  # Seletor para pods, é obrigatório para RunnerSet
+  selector:
+    matchLabels:
+      runnerset-name: {{ $name }}
+  
+  # Nome do serviço para o headless service, é obrigatório para RunnerSet
+  serviceName: {{ $name }}
+  
+  # Campos obrigatórios para o webhook
+  {{- if $runner.organization }}
+  organization: {{ $runner.organization }}
+  {{- end }}
+  {{- if $runner.repository }}
+  repository: {{ $runner.repository }}
+  {{- end }}
+  {{- if $runner.group }}
+  group: {{ $runner.group }}
+  {{- end }}
+  
+  # Labels para o Runner
+  {{- if $runner.labels }}
+  labels:
+  {{- range $runner.labels }}
+    - {{ . }}
+  {{- end }}
+  {{- end }}
+  
+  # Configuração do Pod
+  template:
+    metadata:
+      labels:
+        runnerset-name: {{ $name }}
+        app: actions-runner
+      annotations:
+        # Habilita limpeza automática dos pods concluídos
+        actions.summerwind.dev/cleanup-completed: "true"
+    spec:
+      containers:
+      - name: runner
+        image: ghcr.io/actions/actions-runner:latest
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            cd /home/runner
+            
+            # Instalar jq para processar o JSON da resposta da API
+            apt-get update && apt-get install -y jq
+            
+            # Obter o token de registro do runner
+            TOKEN=$(curl -s -X POST -H "Authorization: token ${GITHUB_TOKEN}" https://api.github.com/orgs/{{ $runner.organization }}/actions/runners/registration-token | jq -r .token)
+            
+            # Verificar se o token foi obtido com sucesso
+            if [ -z "$TOKEN" ] || [ "$TOKEN" == "null" ]; then
+              echo "Falha ao obter o token de registro. Verifique se o token do GitHub tem as permissões adequadas."
+              exit 1
+            fi
+            
+            # Configurar o runner
+            LABELS="{{ join "," $runner.labels }}"
+            ./config.sh --unattended --ephemeral --url https://github.com/{{ $runner.organization }} --token ${TOKEN} --labels ${LABELS} {{- if $runner.group }} --runnergroup {{ $runner.group }} {{- end }}
+            
+            # Iniciar o runner
+            ./run.sh
+        env:
+        {{- with $runner.env }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        - name: GITHUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: controller-auth
+              key: github_token
+        {{- with $runner.resources | default $.Values.defaults.resources }}
+        resources:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        volumeMounts:
+        - name: work-dir
+          mountPath: /home/runner/_work
+      volumes:
+      - name: work-dir
+        emptyDir: {}
+{{- end }}
+{{- end }} 

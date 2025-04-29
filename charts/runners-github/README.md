@@ -11,8 +11,8 @@ Este chart implementa runners para GitHub Actions no seu cluster Kubernetes, tra
 ## Instalação
 
 ```bash
-helm dependency update ./charts/github-runners
-helm install github-runners ./charts/github-runners -n actions-runner-system
+helm dependency update ./charts/runners-github
+helm install github-runners ./charts/runners-github -n github-actions
 ```
 
 ## Tipos de runners suportados
@@ -71,7 +71,7 @@ runners:
       - staging
 ```
 
-#### Runner com auto-scaling
+#### Runner com auto-scaling aprimorado
 
 ```yaml
 runners:
@@ -86,11 +86,33 @@ runners:
       minReplicas: 1
       maxReplicas: 5
       metrics:
+        # Métrica baseada na porcentagem de runners ocupados
+        # - Verifica a cada ~10 segundos a ocupação dos runners ativos
+        # - Só considera runners que estão ATIVAMENTE executando jobs (não enfileirados)
         - type: PercentageRunnersBusy
           scaleUpThreshold: '0.75'
           scaleDownThreshold: '0.25'
           scaleUpFactor: '2'
           scaleDownFactor: '0.5'
+        # Métrica baseada no número total de jobs enfileirados e em progresso
+        # - Responde mais rapidamente a picos de demanda
+        # - Escala mesmo quando não há runners suficientes para iniciar os jobs
+        - type: TotalNumberOfQueuedAndInProgressWorkflowRuns
+          scaleUpThreshold: '1'
+          scaleDownThreshold: '0'
+          scaleUpAdjustment: 1
+          scaleDownAdjustment: 1
+```
+
+## Limpeza automática de pods
+
+Os runners são configurados com a anotação `actions.summerwind.dev/cleanup-completed: "true"` para que os pods sejam automaticamente removidos após concluírem os jobs. Isso mantém o cluster limpo e evita acúmulo de recursos inativos.
+
+Para runners efêmeros (ephemeral), cada job é executado em um pod limpo, que é destruído após a conclusão. A flag `RUNNER_FEATURE_FLAG_EPHEMERAL: "true"` é usada para este comportamento.
+
+Para limpar manualmente pods completados:
+```bash
+kubectl delete pods --field-selector=status.phase==Succeeded -n github-actions
 ```
 
 ## Uso nas GitHub Actions
@@ -125,8 +147,8 @@ Para adicionar autenticação para registros privados, adicione secrets adiciona
 ## Dicas e troubleshooting
 
 - Verifique os logs do controller e dos pods dos runners em caso de problemas
-- Use `kubectl get runnerdeployments -n actions-runner-system` para ver o status dos deployments
-- Use `kubectl get runners -n actions-runner-system` para ver os runners individuais
+- Use `kubectl get runnerdeployments -n github-actions` para ver o status dos deployments
+- Use `kubectl get runners -n github-actions` para ver os runners individuais
 
 ## Documentação adicional
 

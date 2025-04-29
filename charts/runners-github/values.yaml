@@ -1,0 +1,36 @@
+# Configurações para os GitHub Runners
+
+# Namespace onde o controller está instalado
+controllerNamespace: "github-actions"
+
+# Configurações gerais para todos os runners
+defaults:
+  # Recursos padrão para todos os runners
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 1Gi
+
+  # Desabilitar Docker completamente
+  dockerEnabled: false
+
+# Definições dos diferentes runners por repositório
+runners:
+  # Runner com auto-scaling baseado em pending workflows
+  org-runner:
+    enabled: true # Habilitar o RunnerSet
+    type: RunnerDeployment
+    replicas: 2
+    organization: "m5o-dev" # Sua organização
+    group: "m5o" # Grupo de runners personalizado que permite repositórios privados
+    labels:
+    - "self-hosted"
+    - "linux"
+    - "x64"
+    dockerEnabled: false
+    env:
+    - name: RUNNER_FEATURE_FLAG_EPHEMERAL
+      value: "true"

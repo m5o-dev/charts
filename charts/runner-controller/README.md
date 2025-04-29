@@ -55,22 +55,21 @@ Existem duas formas de autenticação com o GitHub:
 ### 2. Instalar o controller
 
 ```bash
-helm dependency update ./charts/actions-runner-controller
-helm install actions-runner-controller ./charts/actions-runner-controller -n actions-runner-system --create-namespace
+helm dependency update ./charts/runner-controller
+helm install runner-controller ./charts/runner-controller -n github-actions --create-namespace
 ```
 
 ## Configuração de runners
 
-Após a instalação do controller, você pode implantar runners usando o chart `github-runners`:
+Após a instalação do controller, você pode implantar runners usando o chart `runners-github`:
 
 ```bash
-helm dependency update ./charts/github-runners
-helm install github-runners ./charts/github-runners -n actions-runner-system
+helm install runners-github ./charts/runners-github -n github-actions
 ```
 
 ### Configurações dos runners
 
-Edite o arquivo `charts/github-runners/values.yaml` para configurar os runners:
+Edite o arquivo `charts/runners-github/values.yaml` para configurar os runners:
 
 - Para um repositório específico:
   ```yaml
@@ -96,6 +95,33 @@ Edite o arquivo `charts/github-runners/values.yaml` para configurar os runners:
         - kubernetes
   ```
 
+- Para auto-scaling avançado:
+  ```yaml
+  runners:
+    autoscaling-runner:
+      enabled: true
+      type: RunnerSet
+      organization: "sua-organizacao"
+      labels:
+        - kubernetes
+      autoscaling:
+        minReplicas: 1
+        maxReplicas: 5
+        metrics:
+          # Escala baseada em porcentagem de ocupação
+          - type: PercentageRunnersBusy
+            scaleUpThreshold: '0.75'
+            scaleDownThreshold: '0.25'
+            scaleUpFactor: '2'
+            scaleDownFactor: '0.5'
+          # Escala baseada em jobs na fila
+          - type: TotalNumberOfQueuedAndInProgressWorkflowRuns
+            scaleUpThreshold: '1'
+            scaleDownThreshold: '0'
+            scaleUpAdjustment: 1
+            scaleDownAdjustment: 1
+  ```
+
 ## Uso nos workflows do GitHub Actions
 
 Depois de configurar os runners, você pode utilizá-los em seus workflows do GitHub Actions especificando a label do runner:
@@ -107,6 +133,16 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       # outros passos aqui
+```
+
+## Manutenção
+
+### Limpeza de pods completados
+
+Os runners são configurados para limpeza automática após conclusão dos jobs. Para limpeza manual:
+
+```bash
+kubectl delete pods --field-selector=status.phase==Succeeded -n github-actions
 ```
 
 ## Documentação adicional
