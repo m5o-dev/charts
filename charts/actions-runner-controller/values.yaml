@@ -1,0 +1,51 @@
+# Configurações para o Actions Runner Controller
+actions-runner-controller:
+  # Método de autenticação com o GitHub
+  # Opções são: 'github-app' ou 'personal-access-token'
+  authSecret:
+    create: true
+    name: "controller-auth"
+    # Alternativa usando Personal Access Token (PAT)
+    github_token: ""
+
+  # Configuração do controller
+  controller:
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 200m
+        memory: 256Mi
+
+  # CRD (Custom Resource Definitions)
+  # Deve ser true para instalação inicial e pode ser false para atualizações
+  crds:
+    install: true
+
+# Recursos de Runner (RunnerDeployment e RunnerSet)
+# Depois que o controller estiver instalado, você precisará aplicar estes recursos
+# separadamente usando kubectl ou helm hooks
+# Exemplo de RunnerDeployment:
+#
+# apiVersion: actions.summerwind.dev/v1alpha1
+# kind: RunnerDeployment
+# metadata:
+#   name: github-runner
+#   namespace: actions-runner-system
+# spec:
+#   replicas: 2
+#   template:
+#     spec:
+#       repository: "seu-usuario/seu-repositorio"
+#       # Ou para todos os repositórios em uma organização:
+#       # organization: "sua-organizacao" 
+#       labels:
+#         - kubernetes
+#         - production
+
+# Configurações para o IngressRoute usando o boilerplate
+helm-boilerplate:
+  ingressRoutes:
+    actions-runner-controller:
+      enabled: false # Normalmente não é necessário um ingress para o controller 
