@@ -42,8 +42,9 @@ runners:
     replicas: 3
     organization: "m5o-dev" # Sua organização
     labels:
-    - kubernetes
-    - staging
+    - "self-hosted"
+    - "linux"
+    - "x64"
     # Você pode adicionar variáveis de ambiente específicas
     env:
     - name: RUNNER_FEATURE_FLAG_EPHEMERAL

@@ -4,7 +4,7 @@ on:
 
 jobs:
   test:
-    runs-on: [kubernetes, staging]
+    runs-on: [self-hosted, linux, x64]
     steps:
       - name: Check runner
         run: |
