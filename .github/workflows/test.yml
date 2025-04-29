@@ -1,0 +1,15 @@
+name: Test Runner Connection
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: [kubernetes, staging]
+    steps:
+      - name: Check runner
+        run: |
+          echo "Hello from self-hosted runner!"
+          echo "Hostname: $(hostname)"
+          echo "OS: $(uname -a)"
+          ls -la
+          pwd 
