@@ -3,7 +3,7 @@ entries:
   actions-runner-controller:
   - apiVersion: v2
     appVersion: 0.27.5
-    created: "2025-04-29T02:57:08.923267318Z"
+    created: "2025-04-29T13:26:29.755775712Z"
     dependencies:
     - name: actions-runner-controller
       repository: https://actions-runner-controller.github.io/actions-runner-controller
@@ -21,7 +21,7 @@ entries:
   chartmuseum:
   - apiVersion: v2
     appVersion: 0.16.2
-    created: "2025-04-29T02:57:08.926685349Z"
+    created: "2025-04-29T13:26:29.785196154Z"
     dependencies:
     - name: chartmuseum
       repository: https://chartmuseum.github.io/charts
@@ -30,7 +30,7 @@ entries:
       repository: file://../boilerplate
       version: '>=0.0.3'
     description: ChartMuseum Helm Repository Server
-    digest: 100028a67785b057740dd33218b39594c8727672c5ba1bbdf43da77cb73198a6
+    digest: 84f014722e54d87154c450df80f8924382d4baa74ac63c9817f10bb65cd6cab3
     name: chartmuseum
     type: application
     urls:
@@ -39,7 +39,7 @@ entries:
   github-runners:
   - apiVersion: v2
     appVersion: 2.310.2
-    created: "2025-04-29T02:57:08.927358968Z"
+    created: "2025-04-29T13:26:29.785949876Z"
     description: GitHub Actions Runners for Kubernetes
     digest: fb602f82a5e9d28072e58fe2e9ccdedeecc8a8b47937c7f588543bd3bb23e169
     name: github-runners
@@ -50,9 +50,9 @@ entries:
   helm-boilerplate:
   - apiVersion: v2
     appVersion: 0.0.1
-    created: "2025-04-29T02:57:08.965164076Z"
+    created: "2025-04-29T13:26:29.789010023Z"
     description: A flexible Helm chart boilerplate for creating any Kubernetes resources
-    digest: b77aadbfc80bcdc852832977d5bae578c548a1062f4dd87f81f252ad1e786d62
+    digest: a302d1071390b98a7d632b80f04a709ed9e0612cefaf2223866db872a6d08dab
     name: helm-boilerplate
     type: application
     urls:
@@ -60,7 +60,7 @@ entries:
     version: 0.0.5
   - apiVersion: v2
     appVersion: 0.0.1
-    created: "2025-04-29T02:57:08.963901273Z"
+    created: "2025-04-29T13:26:29.788419853Z"
     description: A flexible Helm chart boilerplate for creating any Kubernetes resources
     digest: 8f00368501ac81f50f00dfa953e24b17acaca4b3aeb0eca7722c5d09389ed902
     name: helm-boilerplate
@@ -70,7 +70,7 @@ entries:
     version: 0.0.4
   - apiVersion: v2
     appVersion: 0.0.1
-    created: "2025-04-29T02:57:08.962548143Z"
+    created: "2025-04-29T13:26:29.787874304Z"
     description: A flexible Helm chart boilerplate for creating any Kubernetes resources
     digest: 5c504a7e968954760da4393884da219554c12f2580c77b3ca9f1e41d4845114d
     name: helm-boilerplate
@@ -80,7 +80,7 @@ entries:
     version: 0.0.3
   - apiVersion: v2
     appVersion: 0.0.1
-    created: "2025-04-29T02:57:08.960995882Z"
+    created: "2025-04-29T13:26:29.787294496Z"
     description: A flexible Helm chart boilerplate for creating any Kubernetes resources
     digest: f8dd21a4e363752c73c818587037bcbb7089fdb8ef1d4369a9a58c7eff1dce32
     name: helm-boilerplate
@@ -90,7 +90,7 @@ entries:
     version: 0.0.2
   - apiVersion: v2
     appVersion: 0.0.1
-    created: "2025-04-29T02:57:08.959430578Z"
+    created: "2025-04-29T13:26:29.786630898Z"
     description: A flexible Helm chart boilerplate for creating any Kubernetes resources
     digest: 2f00617a1a4030be50355f6ba9fdff4c0e605ddc2ad33c5a910ebc6fae42a611
     name: helm-boilerplate
@@ -101,13 +101,13 @@ entries:
   postgresql:
   - apiVersion: v2
     appVersion: 0.0.1
-    created: "2025-04-29T02:57:08.970301039Z"
+    created: "2025-04-29T13:26:29.791952186Z"
     dependencies:
     - name: helm-boilerplate
       repository: file://../boilerplate
       version: '>=0.0.3'
     description: PostgreSQL chart using the boilerplate
-    digest: ff786c8c1eecf578d28c8105e6be148f5a943443c76e7de83a497cd6fff480fa
+    digest: ddde9b5e17c30872b7a5451d5ce1cba02838245b2a7e697a88f42680aeaa48e6
     name: postgresql
     type: application
     urls:
@@ -115,7 +115,7 @@ entries:
     version: 0.0.2
   - apiVersion: v2
     appVersion: 0.0.1
-    created: "2025-04-29T02:57:08.968041806Z"
+    created: "2025-04-29T13:26:29.790435295Z"
     dependencies:
     - name: helm-boilerplate
       repository: file://../boilerplate
@@ -127,4 +127,30 @@ entries:
     urls:
     - https://m5o-dev.github.io/charts/charts/postgresql/postgresql-0.0.1.tgz
     version: 0.0.1
-generated: "2025-04-29T02:57:08.906071988Z"
+  runner-controller:
+  - apiVersion: v2
+    appVersion: 0.0.1
+    created: "2025-04-29T13:26:29.832646094Z"
+    dependencies:
+    - name: actions-runner-controller
+      repository: https://actions-runner-controller.github.io/actions-runner-controller
+      version: 0.23.5
+    description: GitHub Actions Runner Controller for Kubernetes
+    digest: 93e00c32712d208badf70a66ab8222dec53b111225fa096bff42c17582d46ce9
+    name: runner-controller
+    type: application
+    urls:
+    - https://m5o-dev.github.io/charts/charts/runner-controller/runner-controller-0.0.1.tgz
+    version: 0.0.1
+  runners-github:
+  - apiVersion: v2
+    appVersion: 0.0.1
+    created: "2025-04-29T13:26:29.834323402Z"
+    description: GitHub Actions Runners for Kubernetes
+    digest: 8b9a82e85f1509c87e3f46f9e4f90c2353d56a8cfe61214c4974b184823c189b
+    name: runners-github
+    type: application
+    urls:
+    - https://m5o-dev.github.io/charts/charts/runners-github/runners-github-0.0.1.tgz
+    version: 0.0.1
+generated: "2025-04-29T13:26:29.739154362Z"
