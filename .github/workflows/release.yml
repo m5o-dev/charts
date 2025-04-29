@@ -14,7 +14,8 @@ permissions:
 
 jobs:
   release:
-    runs-on: ubuntu-latest
+    # Usando os runners auto-hospedados no Kubernetes
+    runs-on: [kubernetes, staging]
     steps:
       - name: Checkout
         uses: actions/checkout@v3

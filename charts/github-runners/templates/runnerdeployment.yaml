@@ -1,0 +1,63 @@
+{{- range $name, $runner := .Values.runners }}
+{{- if and $runner.enabled (eq $runner.type "RunnerDeployment") }}
+---
+apiVersion: actions.summerwind.dev/v1alpha1
+kind: RunnerDeployment
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Values.controllerNamespace | default "actions-runner-system" }}
+spec:
+  replicas: {{ $runner.replicas | default 1 }}
+  template:
+    spec:
+      {{- if $runner.repository }}
+      repository: {{ $runner.repository }}
+      {{- end }}
+      {{- if $runner.organization }}
+      organization: {{ $runner.organization }}
+      {{- end }}
+      {{- if $runner.labels }}
+      labels:
+      {{- range $runner.labels }}
+        - {{ . }}
+      {{- end }}
+      {{- end }}
+      
+      {{- with $runner.resources | default $.Values.defaults.resources }}
+      resources:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      
+      {{- with $runner.env }}
+      env:
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+      
+      {{- with $runner.volumes | default $.Values.defaults.volumes }}
+      volumes:
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+      
+      {{- with $runner.volumeMounts | default $.Values.defaults.volumeMounts }}
+      volumeMounts:
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+      
+      {{- with $runner.securityContext | default $.Values.defaults.securityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      
+      {{- if hasKey $runner "dockerEnabled" }}
+      dockerEnabled: {{ $runner.dockerEnabled }}
+      {{- else if hasKey $.Values.defaults "dockerEnabled" }}
+      dockerEnabled: {{ $.Values.defaults.dockerEnabled }}
+      {{- end }}
+      
+      {{- if hasKey $runner "dockerdWithinRunnerContainer" }}
+      dockerdWithinRunnerContainer: {{ $runner.dockerdWithinRunnerContainer }}
+      {{- else if hasKey $.Values.defaults "dockerdWithinRunnerContainer" }}
+      dockerdWithinRunnerContainer: {{ $.Values.defaults.dockerdWithinRunnerContainer }}
+      {{- end }}
+{{- end }}
+{{- end }} 
