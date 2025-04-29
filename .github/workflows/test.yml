@@ -16,6 +16,52 @@ jobs:
           echo "Directory contents:"
           ls -la
       
+      - name: List environment variables explicitly
+        run: |
+          echo "============== ENVIRONMENT VARIABLES EXPLICITLY =============="
+          echo "Listando variáveis do environment 'ci/cd' explicitamente:"
+          echo "Nota: Esta etapa irá listar apenas as variáveis que foram referenciadas explicitamente."
+          echo "Veja as próximas etapas para verificação usando referência via GitHub contexts."
+      
+      - name: Verify environment variables using GitHub contexts
+        env:
+          # Adicione aqui os nomes das suas variáveis de environment
+          # Por exemplo, se você tem uma variável chamada API_URL:
+          MY_CUSTOM_ENV: ${{ vars.MY_CUSTOM_ENV }}
+          API_URL: ${{ vars.API_URL }}
+          DATABASE_URL: ${{ vars.DATABASE_URL }}
+          # Adicione outras variáveis de environment conforme necessário
+        run: |
+          echo "============== ENVIRONMENT VARIABLES VIA GITHUB CONTEXTS =============="
+          echo "MY_CUSTOM_ENV: $MY_CUSTOM_ENV"
+          echo "API_URL: $API_URL"
+          echo "DATABASE_URL: $DATABASE_URL"
+          # Listando todas as variáveis definidas na etapa
+          env | grep -E "MY_CUSTOM_ENV|API_URL|DATABASE_URL" || echo "Nenhuma das variáveis de environment foi encontrada"
+      
+      - name: Verify secrets using GitHub contexts
+        env:
+          # Adicione aqui os nomes dos seus secrets
+          # Por exemplo, se você tem um secret chamado API_TOKEN:
+          API_TOKEN: ${{ secrets.API_TOKEN }}
+          DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          # Adicione outros secrets conforme necessário
+        run: |
+          echo "============== SECRETS VIA GITHUB CONTEXTS =============="
+          # Verificando se os secrets existem (sem mostrar os valores)
+          if [ -n "$API_TOKEN" ]; then echo "API_TOKEN está definido"; else echo "API_TOKEN não está definido"; fi
+          if [ -n "$DATABASE_PASSWORD" ]; then echo "DATABASE_PASSWORD está definido"; else echo "DATABASE_PASSWORD não está definido"; fi
+          if [ -n "$SECRET_KEY" ]; then echo "SECRET_KEY está definido"; else echo "SECRET_KEY não está definido"; fi
+      
+      - name: Debug environment access
+        run: |
+          echo "============== DEBUG ENVIRONMENT ACCESS =============="
+          echo "Environment name: 'ci/cd'"
+          echo "GitHub Actions disponibiliza variáveis de environment através dos contexts 'vars' e 'secrets'"
+          echo "Para acessar uma variável de environment, use: \${{ vars.NOME_DA_VARIAVEL }}"
+          echo "Para acessar um secret de environment, use: \${{ secrets.NOME_DO_SECRET }}"
+          
       - name: List all environment variables and secrets with values
         run: |
           echo "============== ENVIRONMENT VARIABLES AND SECRETS (WITH VALUES) =============="
