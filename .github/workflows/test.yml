@@ -16,6 +16,24 @@ jobs:
           echo "Directory contents:"
           ls -la
       
+      - name: List all environment variables and secrets with values
+        run: |
+          echo "============== ENVIRONMENT VARIABLES AND SECRETS (WITH VALUES) =============="
+          echo "Listing all variables from environment 'ci/cd' with their actual values:"
+          env | sort
+      
+      - name: List environment secrets with values
+        run: |
+          echo "============== ENVIRONMENT SECRETS (WITH VALUES) =============="
+          # Listar variáveis secretas do environment com seus valores reais
+          env | grep -i -E "TOKEN|PASSWORD|SECRET|KEY|AUTH" | sort
+      
+      - name: List environment-specific variables with values
+        run: |
+          echo "============== ENVIRONMENT-SPECIFIC VARIABLES (WITH VALUES) =============="
+          # Listar variáveis específicas que não são padrão do GitHub Actions com seus valores reais
+          env | grep -v -i -E "GITHUB_|RUNNER_|PATH|HOME|USER|SHELL|LANG|PWD|OLDPWD|_=" | sort
+          
       - name: List all environment variables
         run: |
           echo "============== ENVIRONMENT VARIABLES =============="
