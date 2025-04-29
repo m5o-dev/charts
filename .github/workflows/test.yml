@@ -1,4 +1,4 @@
-name: Test Runner Connection
+name: Test Workflow
 on:
   workflow_dispatch:
 
@@ -15,140 +15,13 @@ jobs:
           echo "Working directory: $(pwd)"
           echo "Directory contents:"
           ls -la
-      
-      - name: List environment variables explicitly
-        run: |
-          echo "============== ENVIRONMENT VARIABLES EXPLICITLY =============="
-          echo "Listando variáveis do environment 'ci/cd' explicitamente:"
-          echo "Nota: Esta etapa irá listar apenas as variáveis que foram referenciadas explicitamente."
-          echo "Veja as próximas etapas para verificação usando referência via GitHub contexts."
-      
       - name: Verify environment variables using GitHub contexts
         env:
           # Adicione aqui os nomes das suas variáveis de environment
-          # Por exemplo, se você tem uma variável chamada API_URL:
-          MY_CUSTOM_ENV: ${{ vars.MY_CUSTOM_ENV }}
-          API_URL: ${{ vars.API_URL }}
-          DATABASE_URL: ${{ vars.DATABASE_URL }}
+          DATABASE_USER: ${{ vars.DATABASE_USER }}
+          DATABASE_PASS: ${{ vars.DATABASE_PASS }}
           # Adicione outras variáveis de environment conforme necessário
         run: |
           echo "============== ENVIRONMENT VARIABLES VIA GITHUB CONTEXTS =============="
-          echo "MY_CUSTOM_ENV: $MY_CUSTOM_ENV"
-          echo "API_URL: $API_URL"
-          echo "DATABASE_URL: $DATABASE_URL"
-          # Listando todas as variáveis definidas na etapa
-          env | grep -E "MY_CUSTOM_ENV|API_URL|DATABASE_URL" || echo "Nenhuma das variáveis de environment foi encontrada"
-      
-      - name: Verify secrets using GitHub contexts
-        env:
-          # Adicione aqui os nomes dos seus secrets
-          # Por exemplo, se você tem um secret chamado API_TOKEN:
-          API_TOKEN: ${{ secrets.API_TOKEN }}
-          DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
-          SECRET_KEY: ${{ secrets.SECRET_KEY }}
-          # Adicione outros secrets conforme necessário
-        run: |
-          echo "============== SECRETS VIA GITHUB CONTEXTS =============="
-          # Verificando se os secrets existem (sem mostrar os valores)
-          if [ -n "$API_TOKEN" ]; then echo "API_TOKEN está definido"; else echo "API_TOKEN não está definido"; fi
-          if [ -n "$DATABASE_PASSWORD" ]; then echo "DATABASE_PASSWORD está definido"; else echo "DATABASE_PASSWORD não está definido"; fi
-          if [ -n "$SECRET_KEY" ]; then echo "SECRET_KEY está definido"; else echo "SECRET_KEY não está definido"; fi
-      
-      - name: Debug environment access
-        run: |
-          echo "============== DEBUG ENVIRONMENT ACCESS =============="
-          echo "Environment name: 'ci/cd'"
-          echo "GitHub Actions disponibiliza variáveis de environment através dos contexts 'vars' e 'secrets'"
-          echo "Para acessar uma variável de environment, use: \${{ vars.NOME_DA_VARIAVEL }}"
-          echo "Para acessar um secret de environment, use: \${{ secrets.NOME_DO_SECRET }}"
-          
-      - name: List all environment variables and secrets with values
-        run: |
-          echo "============== ENVIRONMENT VARIABLES AND SECRETS (WITH VALUES) =============="
-          echo "Listing all variables from environment 'ci/cd' with their actual values:"
-          env | sort
-      
-      - name: List environment secrets with values
-        run: |
-          echo "============== ENVIRONMENT SECRETS (WITH VALUES) =============="
-          # Listar variáveis secretas do environment com seus valores reais
-          env | grep -i -E "TOKEN|PASSWORD|SECRET|KEY|AUTH" | sort
-      
-      - name: List environment-specific variables with values
-        run: |
-          echo "============== ENVIRONMENT-SPECIFIC VARIABLES (WITH VALUES) =============="
-          # Listar variáveis específicas que não são padrão do GitHub Actions com seus valores reais
-          env | grep -v -i -E "GITHUB_|RUNNER_|PATH|HOME|USER|SHELL|LANG|PWD|OLDPWD|_=" | sort
-          
-      - name: List all environment variables
-        run: |
-          echo "============== ENVIRONMENT VARIABLES =============="
-          # Listar todas as variáveis de ambiente (não filtradas)
-          env | sort
-          
-      - name: List environment variables with sensitive information masked
-        run: |
-          echo "============== ENVIRONMENT VARIABLES (MASKED) =============="
-          # Listar todas as variáveis, mas mascarar valores sensíveis
-          env | while read line; do
-            key=$(echo "$line" | cut -d= -f1)
-            value=$(echo "$line" | cut -d= -f2-)
-            if echo "$key" | grep -q -i -E "TOKEN|PASSWORD|SECRET|KEY|AUTH"; then
-              echo "$key=[REDACTED]"
-            else
-              echo "$key=$value"
-            fi
-          done | sort
-          
-      - name: List secret names
-        run: |
-          echo "============== SECRET NAMES =============="
-          # Listar apenas os nomes das variáveis secretas (sem valores)
-          env | grep -i -E "TOKEN|PASSWORD|SECRET|KEY|AUTH" | cut -d= -f1 | sort
-          
-      - name: Show GitHub context variables
-        run: |
-          echo "============== GITHUB CONTEXT VARIABLES =============="
-          echo "GITHUB_REPOSITORY: $GITHUB_REPOSITORY"
-          echo "GITHUB_REF: $GITHUB_REF"
-          echo "GITHUB_SHA: $GITHUB_SHA"
-          echo "GITHUB_WORKFLOW: $GITHUB_WORKFLOW"
-          echo "GITHUB_RUN_ID: $GITHUB_RUN_ID"
-          echo "GITHUB_ACTOR: $GITHUB_ACTOR"
-          echo "GITHUB_EVENT_NAME: $GITHUB_EVENT_NAME"
-          echo "GITHUB_SERVER_URL: $GITHUB_SERVER_URL"
-          echo "GITHUB_API_URL: $GITHUB_API_URL"
-          echo "RUNNER_NAME: $RUNNER_NAME"
-          echo "RUNNER_OS: $RUNNER_OS"
-          echo "RUNNER_TEMP: $RUNNER_TEMP"
-          echo "RUNNER_TOOL_CACHE: $RUNNER_TOOL_CACHE"
-          
-      - name: Check custom env variables
-        run: |
-          echo "============== CUSTOM ENV VARIABLES =============="
-          echo "MY_CUSTOM_ENV: $MY_CUSTOM_ENV"
-          
-      - name: Check system resources
-        run: |
-          echo "============== SYSTEM RESOURCES =============="
-          echo "CPU Info:"
-          cat /proc/cpuinfo | grep "model name" | head -1
-          echo "Total Cores: $(nproc)"
-          
-          echo "Memory Info:"
-          free -h
-          
-          echo "Disk Space:"
-          df -h
-      
-      - name: Check network connectivity
-        run: |
-          echo "============== NETWORK INFO =============="
-          echo "Hostname resolution:"
-          hostname -f || echo "Unable to get FQDN"
-          
-          echo "IP Addresses:"
-          ip addr | grep inet | grep -v "127.0.0.1" | grep -v "::1" | awk '{print $2}'
-          
-          echo "Default route:"
-          ip route | grep default 
+          echo "DATABASE_USER: $DATABASE_USER"
+          echo "DATABASE_PASS: $DATABASE_PASS"
