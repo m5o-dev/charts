@@ -14,8 +14,8 @@ permissions:
 
 jobs:
   release:
-    # Usando os runners auto-hospedados no Kubernetes
-    runs-on: [self-hosted]
+    # Usando os runners auto-hospedados com as labels padrão
+    runs-on: [self-hosted, linux, x64]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
