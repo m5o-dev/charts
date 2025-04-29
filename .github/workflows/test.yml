@@ -18,8 +18,28 @@ jobs:
       - name: List all environment variables
         run: |
           echo "============== ENVIRONMENT VARIABLES =============="
-          # Lista todas as variáveis de ambiente, mas filtra informações sensíveis
-          env | grep -v -E "TOKEN|PASSWORD|SECRET|KEY|AUTH" | sort
+          # Listar todas as variáveis de ambiente (não filtradas)
+          env | sort
+          
+      - name: List environment variables with sensitive information masked
+        run: |
+          echo "============== ENVIRONMENT VARIABLES (MASKED) =============="
+          # Listar todas as variáveis, mas mascarar valores sensíveis
+          env | while read line; do
+            key=$(echo "$line" | cut -d= -f1)
+            value=$(echo "$line" | cut -d= -f2-)
+            if echo "$key" | grep -q -i -E "TOKEN|PASSWORD|SECRET|KEY|AUTH"; then
+              echo "$key=[REDACTED]"
+            else
+              echo "$key=$value"
+            fi
+          done | sort
+          
+      - name: List secret names
+        run: |
+          echo "============== SECRET NAMES =============="
+          # Listar apenas os nomes das variáveis secretas (sem valores)
+          env | grep -i -E "TOKEN|PASSWORD|SECRET|KEY|AUTH" | cut -d= -f1 | sort
           
       - name: Show GitHub context variables
         run: |
@@ -37,6 +57,11 @@ jobs:
           echo "RUNNER_OS: $RUNNER_OS"
           echo "RUNNER_TEMP: $RUNNER_TEMP"
           echo "RUNNER_TOOL_CACHE: $RUNNER_TOOL_CACHE"
+          
+      - name: Check custom env variables
+        run: |
+          echo "============== CUSTOM ENV VARIABLES =============="
+          echo "MY_CUSTOM_ENV: $MY_CUSTOM_ENV"
           
       - name: Check system resources
         run: |

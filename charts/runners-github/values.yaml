@@ -34,3 +34,5 @@ runners:
     env:
     - name: RUNNER_FEATURE_FLAG_EPHEMERAL
       value: "true"
+    - name: MY_CUSTOM_ENV
+      value: "my-custom-value"
