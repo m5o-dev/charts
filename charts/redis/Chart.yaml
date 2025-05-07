@@ -1,0 +1,12 @@
+apiVersion: v2
+name: redis
+description: Redis chart using the boilerplate
+type: application
+version: 0.0.1
+appVersion: "0.0.1"
+
+# Dependência do chart boilerplate
+dependencies:
+- name: helm-boilerplate
+  version: ">=0.0.3"
+  repository: "file://../boilerplate"

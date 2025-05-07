@@ -1,0 +1,94 @@
+# Valores para o chart redis
+# Este chart demonstra como usar o boilerplate para configurar
+# uma instância de Redis com configurações básicas
+
+# Passa valores para o subchart boilerplate
+helm-boilerplate:
+  # Secrets para configurações do Redis
+  secrets:
+    redis-credentials:
+      enabled: true # Habilita a criação do Secret
+      type: Opaque # Tipo do Secret (Opaque = padrão para dados sensíveis)
+      data:
+        REDIS_PASSWORD: redis123 # Senha do Redis (altere para uma senha forte em produção)
+
+  deployments:
+    redis:
+      enabled: true # Habilita a criação do Deployment
+      replicas: 1 # Número de réplicas (manter 1 para Redis com persistência)
+      image:
+        repository: redis # Imagem do Redis
+        tag: "8-alpine" # Versão do Redis (alpine para menor tamanho)
+        pullPolicy: IfNotPresent # Política de pull para a imagem
+      ports:
+      - name: redis # Nome da porta
+        containerPort: 6379 # Porta padrão do Redis
+        protocol: TCP # Protocolo usado
+      # Carrega todas as variáveis definidas no Secret automaticamente
+      envFrom:
+      - secretRef:
+          name: redis-credentials # Nome do Secret com as credenciais
+      command:
+      - "redis-server"
+      args:
+      - "--requirepass"
+      - "$(REDIS_PASSWORD)"
+      resources:
+        # Limites e requisições de recursos para o Redis
+        # Ajuste conforme sua carga de trabalho
+        limits:
+          cpu: 500m # 0.5 CPU (máximo)
+          memory: 1Gi # 1 GB de memória (máximo)
+        requests:
+          cpu: 250m # 0.25 CPU (mínimo garantido)
+          memory: 512Mi # 512 MB de memória (mínimo garantido)
+      volumeMounts:
+      - name: redis-data # Nome do volume
+        mountPath: /data # Caminho de montagem no container
+      volumes:
+      - name: redis-data # Nome do volume (deve corresponder ao volumeMount)
+        persistentVolumeClaim:
+          claimName: redis-data # Nome do PVC
+
+  services:
+    redis:
+      enabled: true # Habilita a criação do Service
+      type: ClusterIP # Tipo do serviço (ClusterIP para acesso interno ao cluster)
+      ports:
+      - name: redis # Nome da porta
+        port: 6379 # Porta do serviço
+        targetPort: redis # Porta alvo no container
+        protocol: TCP # Protocolo usado
+      selector:
+        app: redis # Seletor para os pods do Redis
+
+  # ConfigMaps para o Redis
+  # Contém configurações personalizadas para o Redis
+  configMaps:
+    redis-config:
+      enabled: true # Habilita a criação do ConfigMap
+      data:
+        redis.conf: |
+          maxmemory 768mb
+          maxmemory-policy allkeys-lru
+          appendonly yes
+          appendfsync everysec
+          no-appendfsync-on-rewrite yes
+          auto-aof-rewrite-percentage 100
+          auto-aof-rewrite-min-size 64mb
+          notify-keyspace-events KEA
+          save 900 1
+          save 300 10
+          save 60 10000
+
+  # PVC para dados do Redis
+  # Define o armazenamento persistente para os dados do banco
+  persistentVolumeClaims:
+    redis-data:
+      enabled: true # Habilita a criação do PVC
+      accessModes:
+      - ReadWriteOnce # Modo de acesso (RWO = acesso por um único nó)
+      storage: 2Gi # Tamanho do volume (2GB)
+      storageClassName: longhorn # Classe de armazenamento (longhorn)
+      annotations:
+        helm.sh/resource-policy: keep # Mantém o PVC mesmo ao desinstalar o release 
